@@ -1,2 +1,5 @@
 .svn
 .DS_Store
+*.mod
+.sconsign.dblite
+*.o
