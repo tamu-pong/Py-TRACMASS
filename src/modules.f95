@@ -262,15 +262,15 @@ MODULE mod_tracer
 ENDMODULE mod_tracer
 
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
-#if defined diffusion || turb 
+! #if defined diffusion || turb 
 !#ifdef diffusion
 MODULE mod_diffusion
   REAL                                       :: ah, av
 ENDMODULE mod_diffusion
-#endif
+! #endif
 
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
-#ifdef sediment
+
 MODULE mod_sed
   !  REAL :: wsed,rhos,D,critvel,T,cwamp,kincrit
   REAL                                       :: wsed, partdiam
@@ -285,7 +285,6 @@ ENDMODULE mod_sed
 MODULE mod_orbital
   REAL, ALLOCATABLE, DIMENSION(:)            :: orb
 ENDMODULE mod_orbital
-#endif
 
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
 

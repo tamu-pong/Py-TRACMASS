@@ -3,3 +3,5 @@
 *.mod
 .sconsign.dblite
 *.o
+*.so
+*.os

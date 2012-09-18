@@ -1,12 +1,43 @@
 
-env = Environment()
-#-DPROJECT_NAME=\'tes\' -DCASE_NAME=\'tes\' -DARG_INT1=intmin             -DARG_INT2=intrun 
-env.AppendUnique(PROJECT_NAME='tes',
-                 CPPDEFINES=[('PROJECT_NAME', '$PROJECT_NAME'), ('CASE_NAME', '$PROJECT_NAME'), ('ARG_INT1', 'intmin'), ('ARG_INT2', 'intrun'), 
-                             'timestep', 'textwrite', 'zvec1D'],
-                 F95FLAGS=['$_CPPDEFFLAGS', '-fno-underscoring', '-m64', '-x', 'f95-cpp-input', '-fconvert=big-endian', '-gdwarf-2', '-fbounds-check'])
+#===============================================================================
+# 
+#===============================================================================
+CPPDEFINES = [('PROJECT_NAME', '\\\'$PROJECT_NAME\\\''), ('CASE_NAME', '\\\'$PROJECT_NAME\\\''), ('ARG_INT1', 'intmin'), ('ARG_INT2', 'intrun'),
+               'timestep', 'textwrite', 'zvec1D', '$PROJECT_NAME']
 
-env.Object('src/modules.f95')
+F95FLAGS = ['$_CPPDEFFLAGS', '-fno-underscoring', '-x', 'f95-cpp-input', '-fconvert=big-endian', '-gdwarf-2', '-fbounds-check']
+
+#===============================================================================
+# 
+#===============================================================================
+env = Environment(tools=['default', 'distutils', 'cython'])
+py_tracmass = env.Cython('ext/tracmass.pyx')
+
+params_obj = env.SharedObject(py_tracmass)
 
 
-#/sw/bin/gfortran -L/sw/lib -L/sw/opt/netcdf7/lib -I/sw/include -I/sw/opt/netcdf7/include -I/usr/local/mysql/include -fno-underscoring   -Dtes -Dtimestep       -Dtextwrite       -Dzvec1D            -m64 -c -x f95-cpp-input -fconvert=big-endian -gdwarf-2 -fbounds-check -Dtes -Dtimestep       -Dtextwrite       -Dzvec1D            -DPROJECT_NAME=\'tes\' -DCASE_NAME=\'tes\' -DARG_INT1=intmin             -DARG_INT2=intrun              src/modules.f95 -o modules.o
+#===============================================================================
+# 
+#===============================================================================
+fortran_env = Environment()
+
+fortran_env.AppendUnique(PROJECT_NAME='tes', CPPDEFINES=CPPDEFINES, F95FLAGS=F95FLAGS)
+
+ftracmass_helper = fortran_env.SharedObject('ext/ftracmass.f95')
+tes_readfield = fortran_env.SharedObject('projects/tes/tes_readfield.f95')
+
+objects_modules = fortran_env.SharedObject(Glob('src/*.f95'))
+fortran_env.Depends('src/loop.os', ['mod_pos.mod'])
+
+objects = [obj for obj in objects_modules if obj.suffix == '.os']
+modules = [obj for obj in objects_modules if obj.suffix == '.mod']
+
+#===============================================================================
+# 
+#===============================================================================
+env.SharedLibrary('tracmass', [params_obj, ftracmass_helper, objects, tes_readfield])
+
+
+env.Program('cmain', ['test.f95','cmain.c'])
+
+

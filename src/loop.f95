@@ -104,7 +104,7 @@ SUBROUTINE loop
   print 999,intstart,intspin,intrun,intend,nff,isec,idir,nqua,num,voltr,&
        tmin0,tmax0,smin0,smax0,rmin0,rmax0
   
-999 format(' intstart :',i7,'   intspin :',i7, &
+999 format('999 intstart :',i7,'   intspin :',i7, &
          /,'   intrun :',i7,'   intend  :',i7, &
          /,'      nff :',i2,' isec :',i2,'  idir :',i2,' nqua=',i2,' num=',i7,&
          /,'    voltr : ',f9.0,&
@@ -158,7 +158,7 @@ SUBROUTINE loop
      l=l+1   
      nout=nout+1
   endif
-566 format(i8,i7,2f9.3,f6.2,2f10.2 &
+566 format("566", i8,i7,2f9.3,f6.2,2f10.2 &
          ,f12.0,f6.1,f6.2,f6.2,f6.0,8e8.1 )
 #elif defined ifs
   if(rlat == float(jenn(1))) then
@@ -170,7 +170,7 @@ SUBROUTINE loop
      print 566,ntrac,niter,rlon,rlat,zz
      stop 4957
   endif /*orc*/
-566 format(i8,i7,2f8.2,f6.2,2f10.2 &
+566 format("566"i8,i7,2f8.2,f6.2,2f10.2 &
          ,f12.0,f6.1,f6.2,f6.2,f6.0,8e8.1 )
 #endif
  
@@ -201,7 +201,7 @@ SUBROUTINE loop
   call readfields   ! initial dataset
   ntrac=0
   call fancyTimer('initialize dataset','stop')
-
+  
   !==========================================================
   !==========================================================
   !=== Start main time loop                               ===
@@ -495,17 +495,17 @@ SUBROUTINE loop
 #ifdef sediment
      print 599,ints,ntime,ntractot,nout,nloop,nerror,ntractot-nout, & 
           nsed,nsusp,nexit
-599  format('ints=',i7,' time=',i10,' ntractot=',i8,' nout=',i8, & 
+599  format('599 ints=',i7,' time=',i10,' ntractot=',i8,' nout=',i8, & 
           ' nloop=',i4,' nerror=',i4,' in ocean/atm=',i8,' nsed=',i8, & 
           ' nsusp=',i8,' nexit=',9i8)
 #elif defined ifs || rco || tes || orc || baltix || orca1 || orca025  || orca025L75 || orca12 || AusCOM
      print 799 ,ntime,ints ,ntractot ,nout ,nerror,ntractot-nout
-799  format('ntime=',i10,' ints=',i7,' ntractot=',i8,' nout=',i8, & 
+799  format('799 ntime=',i10,' ints=',i7,' ntractot=',i8,' nout=',i8, & 
           ' nerror=',i4,' in ocean/atm=',i8)
 #else
      call fancyTimer('advection','stop') 
      print 799 ,ints ,ntractot-nout ,nout ,nerror,ntractot 
-799  format('ints=',i7,' active=',i10,' out=',i10,' err=',i10,' tot=',i10)
+799  format('799 ints=',i7,' active=',i10,' out=',i10,' err=',i10,' tot=',i10)
 #endif
   
    IF (ntractot /= 0 .AND. ntractot - nout - nerror == 0  .AND.                &
