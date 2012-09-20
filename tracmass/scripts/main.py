@@ -5,7 +5,7 @@ Created on Sep 18, 2012
 @author: sean
 '''
 
-import tracmass as tm
+from tracmass import _tracmass as tm
 from os.path import abspath, join, curdir
 import math
 import numpy as np
@@ -18,11 +18,15 @@ def readfields():
     tm.mod_name
     vel = tm.mod_vel
     tm.mod_dens
-#    tm.mod_stat
-    tm.tes_readfields()
     
-    import pickle
-    coord.idmax
+    time.ints = time.intstart
+#    tm.mod_stat
+#    tm.tes_readfields()
+#    
+#    import pickle
+#    pickle.dump(vel.uflux, open('vel.uflux-orig.picle', 'w'))
+#    return 
+    
     time.ihour = time.ihour + 6
     if time.ihour == 24:
         time.ihour = 0
@@ -78,15 +82,19 @@ def readfields():
     ii = np.cos(np.pi * (np.arange(param.imt) - param.imt / 2.) / (param.imt) + dl).reshape([param.imt, 1, 1])
     jj = np.sin(-np.pi * (np.arange(param.jmt) - param.jmt / 2.) / (param.jmt)).reshape([1, param.jmt, 1])
     
-    vel.uflux[:, :, :, 1] = ((coord.dy * deg * grid.dz * cox) * (ii * jj + (uwe + np.cos(time.omtime))))
+    vel.uflux[:, :, :, 1] = ((coord.dy * deg * cox * grid.dz) * (ii * jj + (uwe + np.cos(time.omtime))))
     
     ii = np.sin(np.pi * (np.arange(param.imt) - param.imt / 2.) / (param.imt) + dl).reshape([param.imt, 1, 1])
     jj = np.cos(np.pi * (np.arange(param.jmt) - param.jmt / 2.) / (param.jmt)).reshape([1, param.jmt, 1])
 
-    vel.vflux[:, 1:, :, 1] = ((coord.dx * deg * grid.dz * coy) * (ii * jj + np.sin(time.omtime)))
+    vel.vflux[:, 1:, :, 1] = ((coord.dx * deg * coy * grid.dz) * (ii * jj + np.sin(time.omtime)))
     
     vel.vflux[:, 0, :, :] = 0.
     vel.vflux[:, param.jmt, :, :] = 0.
+
+    import pickle
+    pickle.dump(vel.uflux, open('vel.uflux-new.picle', 'w'))
+    return 
 
 def writesetup():
 

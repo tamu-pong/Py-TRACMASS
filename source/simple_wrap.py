@@ -7,6 +7,7 @@ Created on Sep 19, 2012
 import re
 from argparse import ArgumentParser, FileType
 from os.path import splitext
+from os.path import basename
 
 states = (
    ('directive', 'inclusive'),
@@ -731,10 +732,10 @@ def main():
     pxd.write('    cdef PyTypeObject PyArray_Type\n')
     pxd.write('    cdef object PyArray_New(PyTypeObject* subtype, int nd, numpy.npy_intp *dims, int type_num, numpy.npy_intp *strides, void *data, int itemsize, int flags, object obj)\n\n')
     
-    pxd.write('cdef extern from "%s":\n' % header.name)
+    pxd.write('cdef extern from "%s":\n' % basename(header.name))
     pyx.write('cimport numpy\n')
     pyx.write('import numpy\n')
-    pyx.write('cimport %s as helper\n\n' % splitext(pxd.name)[0])
+    pyx.write('cimport %s as helper\n\n' % basename(splitext(pxd.name)[0]))
     header.write('#include "fortran_defines.h"\n\n')
 
     for mod in all_modules:
