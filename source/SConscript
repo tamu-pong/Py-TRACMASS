@@ -6,7 +6,7 @@ import os
 CPPDEFINES = [('PROJECT_NAME', '\\\'$PROJECT_NAME\\\''), ('CASE_NAME', '\\\'$PROJECT_NAME\\\''), ('ARG_INT1', 'intmin'), ('ARG_INT2', 'intrun'),
                'timestep', 'textwrite', 'zvec1D', '$PROJECT_NAME']
 
-F95FLAGS = ['$_CPPDEFFLAGS', '-fno-underscoring', '-x', 'f95-cpp-input', '-fconvert=big-endian', '-gdwarf-2', '-fbounds-check', '-O0', '-g3']
+F95FLAGS = ['$_CPPDEFFLAGS', '-fno-underscoring', '-x', 'f95-cpp-input', '-fconvert=big-endian', '-gdwarf-2', '-fbounds-check', '-O0', '-g3','-J', Dir('.')]
 
 #===============================================================================
 # 
