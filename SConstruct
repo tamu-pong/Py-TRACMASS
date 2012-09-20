@@ -15,7 +15,7 @@ import numpy
 CPPPATH = [numpy.get_include()] 
 env = Environment(tools=['default', 'distutils', 'cython'])
 env.AppendUnique(CPPPATH=CPPPATH, CFLAGS=['-O0', '-g3'])
-py_tracmass = env.Cython('ext/tracmass.pyx')
+#py_tracmass = env.Cython('ext/tracmass.pyx')
 
 #params_obj = env.SharedObject(py_tracmass)
 
@@ -41,10 +41,13 @@ f_tm = fortran_env.SharedObject('ext/ftracmass.f95')
 #ftracmass_helper = fortran_env.SharedObject('ext/ftracmass.f95')
 tes_readfield = fortran_env.SharedObject('projects/tes/tes_readfield.f95')
 
-
 objects_modules = fortran_env.SharedObject(f95_src)
-fortran_env.Depends('src/loop.os', ['mod_pos.mod'])
-fortran_env.Depends('src/loop_pos.os', ['mod_psi.mod'])
+
+Depends(f_tm, [objects_modules])
+Depends('src/loop.os', ['mod_pos.mod'])
+Depends('src/loop_pos.os', ['mod_psi.mod'])
+Depends('src/coord.os', ['mod_param.mod'])
+Depends('src/init_par.os', ['mod_seed.mod'])
 #fortran_env.Depends(ftracmass_helper, ['mod_time.mod'])
 
 objects = [obj for obj in objects_modules if obj.suffix == '.os']

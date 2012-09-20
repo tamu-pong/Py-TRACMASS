@@ -5,3 +5,9 @@
 *.o
 *.so
 *.os
+ext/tracmass.c
+projects/tes/snippet.py
+readfield.f95
+rerun.f95
+results-new
+tracmass.h

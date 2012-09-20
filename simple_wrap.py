@@ -550,7 +550,14 @@ def write_mod_pyx_ty(pyx, mod, var, ty):
         for i in range(ty.ndim):
             ctx['i'] = i
             pyx.write('        dims[%(i)i] = _shape[%(i)i]\n' % ctx)
-        ctx['npy_type_enum'] = 'numpy.NPY_FLOAT'
+            
+        npy_type_enum = {('INTEGER', None):'numpy.NPY_INT', 
+                         ('REAL', None):'numpy.NPY_FLOAT',
+                         ('REAL', 4):'numpy.NPY_FLOAT',
+                         ('REAL', 8):'numpy.NPY_DOUBLE',
+                         }
+        ctx['npy_type_enum'] = npy_type_enum[(ty.name, ty.size)]
+        
         pyx.write('        return helper.PyArray_New(&helper.PyArray_Type, %(ndim)i, dims, %(npy_type_enum)s, NULL, <void*>loc, 0, numpy.NPY_FARRAY, None)\n' % ctx)
 
         pyx.write('    %(var)s = property(_get_%(var)s)\n\n' % ctx)

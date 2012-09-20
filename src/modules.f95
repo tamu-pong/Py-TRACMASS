@@ -44,7 +44,7 @@ MODULE mod_coord
 #endif
   REAL*8, ALLOCATABLE, DIMENSION(:)         :: zw
   REAL*8, ALLOCATABLE, DIMENSION(:)         :: csu,cst,dyt,phi
-  INTEGER idmax(12,1000:3000)
+  INTEGER, DIMENSION(12,1000:3000) :: idmax
 ENDMODULE mod_coord
 
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===

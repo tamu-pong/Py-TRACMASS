@@ -7,7 +7,87 @@ Created on Sep 18, 2012
 
 import tracmass as tm
 from os.path import abspath, join, curdir
+import math
+import numpy as np
     
+def readfields():
+    param = tm.mod_param
+    coord = tm.mod_coord
+    time = tm.mod_time
+    grid = tm.mod_grid
+    tm.mod_name
+    vel = tm.mod_vel
+    tm.mod_dens
+#    tm.mod_stat
+    tm.tes_readfields()
+    
+    import pickle
+    coord.idmax
+    time.ihour = time.ihour + 6
+    if time.ihour == 24:
+        time.ihour = 0
+        time.iday = time.iday + 1
+        if time.iday > coord.idmax[time.imon-1, time.iyear-1000]:
+#        if time.iday > 30:
+            time.iday = 1
+            time.imon = time.imon + 1
+            if time.imon == 13:
+                time.imon = 1
+                time.iyear = time.iyear + 1
+                if time.iyear > time.yearmax: time.iyear = time.yearmin # recycle over gcm outputdata
+
+#    print time.ints, time.intstart
+#    return
+
+    deg = 6371229.* (math.pi / 180.)
+    
+    if time.ints == time.intstart:
+        print "Init Fields"
+        vel.hs[:] = 0
+        vel.uflux[:] = 0
+        vel.vflux[:] = 0
+        grid.kmt[:] = param.km
+        
+        coord.dxdeg = coord.dx * deg
+        coord.dydeg = coord.dy * deg
+        
+        time.iyear = time.startyear
+        time.imon = time.startmon
+        time.iday = time.startday
+        time.ihour = time.starthour
+        
+        print 'iyear=', time.iyear, time.imon, time.iday, time.ihour, coord.dxdeg, coord.dydeg
+        
+        tm.coordinat()
+        
+    vel.uflux[:, :, :, 0] = vel.uflux[:, :, :, 1]
+    vel.vflux[:, :, :, 0] = vel.vflux[:, :, :, 1]
+
+    time.ntime = 1000000 * time.iyear + 10000 * time.imon + 100 * time.iday + time.ihour
+
+    time.omtime = time.ints / 5. + 1.
+    
+
+    cox = 0.5 + 0.5 * np.cos(time.omtime)
+    coy = 0.5 + 0.5 * np.cos(time.omtime + np.pi)
+    
+    #    ! cox = 0.d0 ! stationary
+    uwe = -0.4
+    dl = time.ints * 0.01 * np.pi
+    
+    ii = np.cos(np.pi * (np.arange(param.imt) - param.imt / 2.) / (param.imt) + dl).reshape([param.imt, 1, 1])
+    jj = np.sin(-np.pi * (np.arange(param.jmt) - param.jmt / 2.) / (param.jmt)).reshape([1, param.jmt, 1])
+    
+    vel.uflux[:, :, :, 1] = ((coord.dy * deg * grid.dz * cox) * (ii * jj + (uwe + np.cos(time.omtime))))
+    
+    ii = np.sin(np.pi * (np.arange(param.imt) - param.imt / 2.) / (param.imt) + dl).reshape([param.imt, 1, 1])
+    jj = np.cos(np.pi * (np.arange(param.jmt) - param.jmt / 2.) / (param.jmt)).reshape([1, param.jmt, 1])
+
+    vel.vflux[:, 1:, :, 1] = ((coord.dx * deg * grid.dz * coy) * (ii * jj + np.sin(time.omtime)))
+    
+    vel.vflux[:, 0, :, :] = 0.
+    vel.vflux[:, param.jmt, :, :] = 0.
+
 def writesetup():
 
     print '======================================================'
@@ -148,10 +228,10 @@ def main():
     tm.fortran_file(58, filename + '_in.asc')        # entrance position
     tm.fortran_file(59, filename + '_err.asc')       # Error position
     
-    tm.loop.readfields = tm.tes_readfields
+    tm.loop.readfields = readfields
     
     tm.loop.readfields()
-    tm.loop()
+#    tm.loop()
     
     print "Done!"
     
