@@ -4,7 +4,7 @@ import SCons.Errors
 
 def generate(env):
 
-    CythonBuilder = SCons.Builder.Builder(action='cython $SOURCE -o $TARGET',
+    CythonBuilder = SCons.Builder.Builder(action='cython $SOURCE -o $TARGET $_CPPINCFLAGS',
                       src_suffix='.pyx',
                       suffix='.c',
                           )
