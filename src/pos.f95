@@ -25,8 +25,8 @@ subroutine pos_orgn(ijk,ia,ja,ka,r0,r1,ds,rr)
   USE mod_turb
   IMPLICIT none
 
-  real*8 r0,r1,rr,rg,ds,uu,um,vv,vm,en
-  integer ijk,ia,ja,ka,ii,im
+  real*8 :: r0,r1,rr,rg,ds,uu,um,vv,vm,en
+  integer :: ijk,ia,ja,ka,ii,im
   
   rg=1.d0-rr
   

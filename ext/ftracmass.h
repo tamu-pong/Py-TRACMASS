@@ -96,11 +96,19 @@ void init_seed(void);
 
 extern int intmin, intmax, intstart, intend;
 
+/* ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== 
+ * Mod Vel
+ * ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== */
 
+#define uflux FORTRAN_MANGLE_MOD(mod_vel, uflux)
+#define get_uflux_shape FORTRAN_MANGLE(get_uflux_shape)
+#define vflux FORTRAN_MANGLE_MOD(mod_vel, vflux)
+#define get_vflux_shape FORTRAN_MANGLE(get_vflux_shape)
 
-
-
-
+// asdf
+float *uflux, *vflux;
+void get_uflux_shape(int*);
+void get_vflux_shape(int*);
 
 
 

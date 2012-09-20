@@ -1,0 +1,2 @@
+#define FORTRAN_MANGLE(ATTR) ATTR
+#define FORTRAN_MANGLE_MOD(MOD, ATTR) __## MOD ## _MOD_ ## ATTR

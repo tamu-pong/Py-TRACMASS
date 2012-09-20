@@ -30,8 +30,8 @@ USE mod_turb
 USE mod_time
 IMPLICIT none
 
-real*8 r0,ba,sp,sn,uu,um,rr,rg,vv,vm
-integer ijk,ia,ja,ka,ii,im
+real*8 :: r0,ba,sp,sn,uu,um,rr,rg,vv,vm
+integer  :: ijk,ia,ja,ka,ii,im
 
 rg=1.d0-rr
 

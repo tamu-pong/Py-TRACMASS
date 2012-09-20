@@ -3,10 +3,6 @@
 cdef extern from "ftracmass.h":
     
     void file_open(int *fd, char *filename, int flen)
-    
-    void tes_readfields()
-    void loop() nogil
-    void coordinat()
 
       
     void init_params()
@@ -32,3 +28,11 @@ cdef extern from "ftracmass.h":
     double partQuant, voltr
     
     void simple_print()
+    
+    
+    # Module Vel
+    
+    float *uflux, *vflux
+    void get_uflux_shape(int*)
+    void get_vflux_shape(int*)
+

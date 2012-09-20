@@ -15,10 +15,10 @@ def writesetup():
     print '------------------------------------------------------'
     print 'Start date  : '
     print 'Start time  : '
-    print 'Model code  : ', tm.name.gcm_name.strip()
-    print 'Data surce  : ', tm.name.grid_name.strip()
-    print 'Run name    : ', tm.name.case_name.strip()
-    print 'Description : ', tm.name.case_desc.strip()
+    print 'Model code  : ', tm.mod_name.gcmname.strip()
+    print 'Data surce  : ', tm.mod_name.gridname.strip()
+    print 'Run name    : ', tm.mod_name.casename.strip()
+    print 'Description : ', tm.mod_name.casedesc.strip()
     print '------------------------------------------------------'
     
     '''
@@ -114,42 +114,43 @@ def main():
     tm.coordinat()
     writesetup()
     
-    print 'tm.time.intmin', tm.time.intmin
-    print 'tm.time.intmax', tm.time.intmax
+    print 'tm.time.intmin', tm.mod_time.intmin
+    print 'tm.time.intmax', tm.mod_time.intmax
     
-    if tm.seed.nff == 1: #Forward
+    if tm.mod_seed.nff == 1: #Forward
         print "Forward"
-        tm.time.intstart = tm.time.intmin          
-        tm.time.intend = tm.time.intmax
+        tm.mod_time.intstart = tm.mod_time.intmin          
+        tm.mod_time.intend = tm.mod_time.intmax
     else: #Backward
         print "Backward"
-        tm.time.intstart = tm.time.intmin          
-        tm.time.intend = tm.time.intmax
+        tm.mod_time.intstart = tm.mod_time.intmin          
+        tm.mod_time.intend = tm.mod_time.intmax
     
-    print "tm.time.intstart", tm.time.intstart
-    print "tm.time.intend", tm.time.intend
-    tm.seed.init()
+    print "tm.time.intstart", tm.mod_time.intstart
+    print "tm.time.intend", tm.mod_time.intend
+    tm.init_seed()
     
     filename = abspath(join(curdir, 'results-new', 'data'))
         
     print "filename", filename
-    print "tm.seed.nqua", tm.seed.nqua
-    if tm.seed.nqua == 1:  # number of trajectories (per time resolution)
+    print "tm.mod_seed.nqua", tm.mod_seed.nqua
+    if tm.mod_seed.nqua == 1:  # number of trajectories (per time resolution)
         # num=NTRACMAX
-        print "tm.params.part_quant", tm.params.part_quant, tm.seed.num
-        tm.seed.num = tm.params.part_quant
-    elif tm.seed.nqua == 2: 
-        tm.params.voltr = tm.params.part_quant 
-    elif tm.seed.nqua == 3: 
-        tm.params.voltr = tm.params.part_quant
+        print "tm.params.part_quant", tm.mod_param.partquant, tm.mod_seed.num
+        tm.mod_seed.num = tm.mod_param.partquant
+    elif tm.mod_seed.nqua == 2: 
+        tm.mod_param.voltr = tm.mod_param.partquant 
+    elif tm.mod_seed.nqua == 3: 
+        tm.mod_param.voltr = tm.mod_param.partquant
     
-    tm.fortran_file(56, filename + '_run.asc' ) # trajectory path
-    tm.fortran_file(57, filename + '_out.asc' )       # exit position
-    tm.fortran_file(58, filename + '_in.asc' )        # entrance position
+    tm.fortran_file(56, filename + '_run.asc')       # trajectory path
+    tm.fortran_file(57, filename + '_out.asc')       # exit position
+    tm.fortran_file(58, filename + '_in.asc')        # entrance position
     tm.fortran_file(59, filename + '_err.asc')       # Error position
     
-    
     tm.loop.readfields = tm.tes_readfields
+    
+    tm.loop.readfields()
     tm.loop()
     
     print "Done!"

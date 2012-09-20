@@ -1,6 +1,16 @@
 
 cimport ftracmass
+cimport numpy
+cimport cpython
+from numpy_supplement cimport *
+import numpy
+
+cdef extern from "stdlib.h":
+    void* malloc(size_t)
     
+cdef extern from "Python.h":
+    object PyMemoryView_FromBuffer(Py_buffer *)
+        
 def coordinat():
     ftracmass.coordinat()
 
@@ -183,8 +193,46 @@ class _NAME_(object):
 
     case_desc = property(_get_caseDesc, _set_caseDesc)
     
+
+class _VEL_(object):
     
+    def _get_uflux(self):
+        
+        cdef int uflux_shape[4]
+        cdef numpy.npy_intp dims[4]
+        ftracmass.get_uflux_shape(uflux_shape)
+        
+        dims[0] = uflux_shape[0]
+        dims[1] = uflux_shape[1]
+        dims[2] = uflux_shape[2]
+        dims[3] = uflux_shape[3]
+        
+        print dims[0],dims[1], dims[2], dims[3] 
+        return PyArray_New(&PyArray_Type, 4, dims, NPY_FLOAT, NULL, ftracmass.uflux, 0, NPY_FARRAY, None)
+    
+    uflux = property(_get_uflux)
+
+    def _get_vflux(self):
+            
+        cdef int _shape[4]
+        cdef numpy.npy_intp dims[4]
+        ftracmass.get_vflux_shape(_shape)
+        
+        dims[0] = _shape[0]
+        dims[1] = _shape[1]
+        dims[2] = _shape[2]
+        dims[3] = _shape[3]
+        
+        return PyArray_New(&PyArray_Type, 4, dims, NPY_FLOAT, NULL, ftracmass.vflux, 0, NPY_FARRAY, None)
+        
+    vflux = property(_get_vflux)
+
+
+vel = _VEL_()
 time = _TIME_()
 seed = _SEED_()
 params = _PARAMS_()
 name = _NAME_()
+
+
+import_array()
