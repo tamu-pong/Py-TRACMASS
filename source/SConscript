@@ -58,7 +58,8 @@ modules = [obj for obj in objects_modules if obj.suffix == '.mod']
 #===============================================================================
 # 
 #===============================================================================
-env.SharedLibrary('_tracmass', [f_helper, objects, tes_readfield, pyx_helper_c, f_tm])
+
+env.LoadableModule('_tracmass.so', [f_helper, objects, tes_readfield, pyx_helper_c, f_tm])
 
 
 #env.Program('cmain', ['test.f95','cmain.c'])

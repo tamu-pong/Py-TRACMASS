@@ -4,6 +4,7 @@ import re
 import sys
 
 import SCons.Script
+
 def TOOL_DISTUTILS(env):
     """Add stuff needed to build Python/Pyrex extensions [with MSVC]."""
     (cc, opt, so_ext, LDCXXSHARED, CFLAGS) = distutils.sysconfig.get_config_vars('CC', 'OPT', 'SO', 'LDSHARED', 'CFLAGS')
@@ -18,7 +19,7 @@ def TOOL_DISTUTILS(env):
         else:
             i+=1
             
-    env['SHLINKFLAGS'] = LDCXXSHARED[1:]
+    env.AppendUnique(LDMODULEFLAGS=LDCXXSHARED[1:])
 #    print 'CFLAGS', CFLAGS
 #    ld_shared = print SCons.Script.Split(LDCXXSHARED)
     

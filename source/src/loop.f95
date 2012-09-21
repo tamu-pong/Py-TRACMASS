@@ -50,13 +50,15 @@ SUBROUTINE loop
 #endif /*sediment*/
   
   IMPLICIT none
-    
+  
+  INTEGER :: err    
   INTEGER mra,mta,msa
   
 #if defined sediment
   INTEGER nsed,nsusp
   logical res
 #endif /*sediment*/
+
  
   INTEGER                                    :: ia, ja, ka, iam
   INTEGER                                    :: ib, jb, kb, ibm
@@ -198,7 +200,10 @@ SUBROUTINE loop
   ff=dble(nff)
 !  tstep=dble(intstep) 
   ints=intstart
-  call readfields   ! initial dataset
+  call readfields(err)   ! initial dataset
+  if (err==1) then
+    return
+  endif
   ntrac=0
   call fancyTimer('initialize dataset','stop')
   
@@ -211,7 +216,10 @@ SUBROUTINE loop
 !  intsTimeLoop: do ints=intstart+nff,intstart+intrun,nff
      call fancyTimer('reading next datafield','start')
      tt = ints*tseas
-     call readfields
+     call readfields(err)   ! initial dataset
+     if (err==1) then
+         return
+     endif
      call fancyTimer('reading next datafield','stop')
      
      !=======================================================
@@ -267,7 +275,11 @@ SUBROUTINE loop
         call interp(nrj(ntrac,1),nrj(ntrac,2),nrj(ntrac,3),&
         trj(ntrac,1),trj(ntrac,2),trj(ntrac,3),temp,salt,dens,1)
 #endif
-        call writedata(10)
+        call writedata(10,t0, temp, x1, y1, z1, niter, salt, dens, err)
+        if (err == 1) then
+            return
+        endif
+            
         endif
 
 #ifdef rerun
@@ -367,7 +379,11 @@ SUBROUTINE loop
            end if
 #endif /*tracer*/
            
-           call writedata(11)
+           call writedata(11,t0, temp, x1, y1, z1, niter, salt, dens, err)
+            if (err == 1) then
+                return
+            endif
+
            
            !==============================================! 
            ! calculate the 3 crossing times over the box  ! 
@@ -488,7 +504,11 @@ SUBROUTINE loop
         end do niterLoop
 
         nout=nout+1
-        call writedata(17)
+        call writedata(17,t0, temp, x1, y1, z1, niter, salt, dens,err)
+        if (err == 1) then
+            return
+        endif
+
         nrj(ntrac,6)=1
      end do ntracLoop
      
@@ -522,7 +542,11 @@ SUBROUTINE loop
 #ifdef sediment
   print *,nsed     ,' trajectories sedimented'
   print *,nsusp    ,' trajectories resuspended'
-  call writedata(19)
+  call writedata(19,t0, temp, x1, y1, z1, niter, salt, dens, err)
+        if (err == 1) then
+            return
+        endif
+
   
 #endif
 #ifdef tempsalt     
@@ -617,7 +641,11 @@ return
              nerror=nerror+1
              errCode = -39
              if (strict==1) stop 40961
-             call writedata(40)
+             call writedata(40, t0, temp, x1, y1, z1, niter, salt, dens, err)
+        if (err == 1) then
+            return
+        endif
+
              nrj(ntrac,6)=1
           endif          
 
@@ -638,12 +666,20 @@ return
                 print *,'The trajectory is killed'
                 print *,'====================================='
              end if
-             call writedata(19)
+             call writedata(19, t0, temp, x1, y1, z1, niter, salt, dens, err)
+        if (err == 1) then
+            return
+        endif
+
              nerror=nerror+1
              boundError = boundError +1
              errCode = -50
              if (strict==1) stop
-             call writedata(40)
+             call writedata(40, t0, temp, x1, y1, z1, niter, salt, dens, err)
+        if (err == 1) then
+            return
+        endif
+
              nrj(ntrac,6)=1
           endif
 
@@ -672,7 +708,11 @@ return
              nerror=nerror+1
              landError = landError +1
              errCode = -40             
-             call writedata(40)
+             call writedata(40, t0, temp, x1, y1, z1, niter, salt, dens, err)
+        if (err == 1) then
+            return
+        endif
+
              nrj(ntrac,6)=1
              if (strict==1) stop 
           endif
@@ -856,7 +896,196 @@ return
         end select
       end subroutine errorCheck
 
-  subroutine writedata(sel)
+  subroutine calc_dxyz
+    ! T-box volume in m3
+#ifdef zgrid3Dt 
+    dxyz=rg*dzt(ib,jb,kb,nsp)+rr*dzt(ib,jb,kb,nsm)
+#elif  zgrid3D
+    dxyz=dzt(ib,jb,kb)
+#ifdef freesurface
+    if(kb == KM) dxyz=dxyz+rg*hs(ib,jb,nsp)+rr*hs(ib,jb,nsm)
+#endif /*freesurface*/
+#else
+    dxyz=dz(kb)
+#ifdef varbottombox
+    if(kb == KM+1-kmt(ib,jb) ) dxyz=dztb(ib,jb,1)
+#endif /*varbottombox*/
+#ifdef freesurface
+    if(kb == KM) dxyz=dxyz+rg*hs(ib,jb,nsp)+rr*hs(ib,jb,nsm)
+#endif /*freesurface*/
+#endif /*zgrid3Dt*/
+    dxyz=dxyz*dxdy(ib,jb)
+    if (dxyz<0) then
+       print *,'====================================='
+       print *,'ERROR: Negative box volume           '
+       print *,'-------------------------------------'
+       print *,'dzt  = ', dxyz/dxdy(ib,jb),dz(kb),hs(ib,jb,:)
+       print *,'dxdy = ', dxdy(ib,jb)
+       print *,'ib  = ', ib, ' jb  = ', jb, ' kb  = ', kb 
+       print *,'-------------------------------------'
+       print *,'The run is terminated'
+       print *,'====================================='
+       errCode = -60
+       stop
+    end if
+  end subroutine calc_dxyz
+
+  subroutine calc_time
+#ifdef regulardt
+           if(ds == dsmin) then ! transform ds to dt in seconds
+!            dt=dt  ! this makes dt more accurate
+           else
+            dt=ds*dxyz 
+           endif
+#else
+           if(ds == dsmin) then ! transform ds to dt in seconds
+              dt=dtmin  ! this makes dt more accurate
+           else
+              dt=ds*dxyz 
+           endif
+#endif /*regulardt*/
+           if(dt.lt.0.d0) then
+              print *,'dt=',dt
+              stop 49673
+           endif
+           ! === if time step makes the integration ===
+           ! === exceed the time when fiedls change ===
+           if(tss+dt/tseas*dble(iter).ge.dble(iter)) then
+              dt=dble(idint(ts)+1)*tseas-tt
+              tt=dble(idint(ts)+1)*tseas
+              ts=dble(idint(ts)+1)
+              tss=dble(iter)
+              ds=dt/dxyz
+              dsc=ds
+           else
+              tt=tt+dt
+#if defined regulardt
+              if(dt == dtmin) then
+                 ts=ts+dstep
+                 tss=tss+1.d0
+              elseif(dt == dtreg) then  
+                 ts=nint((ts+dtreg/tseas)*dble(iter))/dble(iter)
+!                 ts=ts+dtreg/tseas
+                 tss=dble(nint(tss+dt/dtmin))
+              else
+                 ts=ts+dt/tseas
+                 tss=tss+dt/dtmin
+              endif
+#else
+              if(dt == dtmin) then
+                 ts=ts+dstep
+                 tss=tss+1.d0
+              else
+                 ts =ts +dt/tseas
+                 tss=tss+dt/tseas*dble(iter)
+!                 tss=tss+dt/dtmin
+              endif
+#endif /*regulardt*/
+           end if
+           ! === time interpolation constant ===
+           rbg=dmod(ts,1.d0) 
+           rb =1.d0-rbg
+         end subroutine calc_time
+
+  subroutine fancyTimer(timerText ,testStr)
+    IMPLICIT NONE
+
+    CHARACTER (len=*)                          :: timerText ,testStr
+    REAL ,SAVE                                 :: fullstamp1 ,fullstamp2
+    REAL ,SAVE ,DIMENSION(2)                   :: timestamp1 ,timestamp2
+    REAL                                       :: timeDiff
+!!$    
+!!$    select case (trim(testStr))
+!!$    case ('start')
+!!$       WRITE (6, FMT="(A)", ADVANCE="NO") ,' - Begin '//trim(timerText)
+!!$       call etime(timestamp1,fullstamp1)
+!!$    case ('stop')
+!!$       call etime(timestamp2,fullstamp2)
+!!$       timeDiff=fullstamp2-fullstamp1
+!!$       write (6 , FMT="(A,F6.1,A)") ', done in ' ,timeDiff ,' sec'
+!!$    end select
+  end subroutine fancyTimer
+end subroutine loop
+
+
+  subroutine writedata2(sel, t0, temp, x1, y1, z1, niter, salt, dens, err)
+
+  USE mod_param
+  USE mod_name
+  USE mod_time
+  USE mod_loopvars
+  USE mod_grid
+  USE mod_buoyancy
+  USE mod_seed
+  USE mod_domain
+  USE mod_vel
+  USE mod_traj
+  USE mod_pos
+  USE mod_turb
+  USE mod_coord
+#ifdef tracer
+  USE mod_tracer
+#endif /*tracer*/
+#ifdef streamxy
+  USE mod_streamxy
+#endif /*streamxy*/
+#ifdef streamv
+  USE mod_streamv
+#endif /*streamv*/
+#ifdef streamr
+  USE mod_streamr
+#endif /*streamr*/
+#ifdef stream_thermohaline
+  USE mod_stream_thermohaline
+#endif /*stream_thermohaline*/
+#ifdef tracer
+  USE mod_tracer
+#endif /*tracer*/
+#ifdef sediment
+  USE mod_sed
+#endif /*sediment*/
+  
+  IMPLICIT none
+    
+    !     INTEGER mra,mta,msa
+    ! 
+    ! #if defined sediment
+    !     INTEGER nsed,nsusp
+    !     logical res
+    ! #endif /*sediment*/
+    ! 
+    !     INTEGER                                    :: ia, ja, ka, iam
+    !     INTEGER                                    :: ib, jb, kb, ibm
+    !     INTEGER                                    :: i,  j,  k, l, m
+          INTEGER                                    :: niter
+    !     INTEGER                                    :: nrh0=0
+    ! 
+    !     ! Counters
+    !     INTEGER                                    :: nout=0, nloop=0, nerror=0
+    !     INTEGER                                    :: nnorth=0, ndrake=0, ngyre=0
+    !     INTEGER                                    :: nexit(NEND)
+    ! 
+          REAL                                       :: temp, salt, dens
+    !     REAL                                       :: temp2, salt2, dens2
+    !     REAL*8                                     :: x0, y0, z0
+          REAL*8                                     :: x1, y1, z1
+    !     REAL*8                                     :: rlon,rlat
+    !     REAL*8                                     :: dt
+          REAL*8                                     :: t0
+    !     REAL*8                                     :: dtreg
+    ! 
+    ! 
+    !     ! === Error Evaluation ===
+    !     INTEGER                                    :: errCode
+    !     INTEGER                                    :: landError=0 ,boundError=0
+    !     REAL                                       :: zz
+    ! 
+    ! #if defined sediment
+    !     ! Specific for sediment code
+    !     INTEGER                                    :: nsed,nsusp
+    !     LOGICAL                                    :: res
+    ! #endif /*sediment*/
+
     REAL                                 :: vort
     INTEGER                              :: sel ,xf ,yf ,zf ,n
     INTEGER, SAVE                        :: recPosIn=0  ,recPosOut=0
@@ -864,7 +1093,7 @@ return
     INTEGER, SAVE                        :: recPosKll=0
     REAL                                 :: x14 ,y14 ,z14
     REAL*8                               :: twrite
-
+    INTEGER :: err
 #if defined for || sim 
 566 format(i8,i7,f7.2,f7.2,f7.1,f10.2,f10.2 &
          ,f10.1,f6.2,f6.2,f6.2,f6.0,8e8.1 )
@@ -1007,116 +1236,4 @@ return
     end select
 #endif    
 
-  end subroutine writedata
-
-  subroutine calc_dxyz
-    ! T-box volume in m3
-#ifdef zgrid3Dt 
-    dxyz=rg*dzt(ib,jb,kb,nsp)+rr*dzt(ib,jb,kb,nsm)
-#elif  zgrid3D
-    dxyz=dzt(ib,jb,kb)
-#ifdef freesurface
-    if(kb == KM) dxyz=dxyz+rg*hs(ib,jb,nsp)+rr*hs(ib,jb,nsm)
-#endif /*freesurface*/
-#else
-    dxyz=dz(kb)
-#ifdef varbottombox
-    if(kb == KM+1-kmt(ib,jb) ) dxyz=dztb(ib,jb,1)
-#endif /*varbottombox*/
-#ifdef freesurface
-    if(kb == KM) dxyz=dxyz+rg*hs(ib,jb,nsp)+rr*hs(ib,jb,nsm)
-#endif /*freesurface*/
-#endif /*zgrid3Dt*/
-    dxyz=dxyz*dxdy(ib,jb)
-    if (dxyz<0) then
-       print *,'====================================='
-       print *,'ERROR: Negative box volume           '
-       print *,'-------------------------------------'
-       print *,'dzt  = ', dxyz/dxdy(ib,jb),dz(kb),hs(ib,jb,:)
-       print *,'dxdy = ', dxdy(ib,jb)
-       print *,'ib  = ', ib, ' jb  = ', jb, ' kb  = ', kb 
-       print *,'-------------------------------------'
-       print *,'The run is terminated'
-       print *,'====================================='
-       errCode = -60
-       stop
-    end if
-  end subroutine calc_dxyz
-
-  subroutine calc_time
-#ifdef regulardt
-           if(ds == dsmin) then ! transform ds to dt in seconds
-!            dt=dt  ! this makes dt more accurate
-           else
-            dt=ds*dxyz 
-           endif
-#else
-           if(ds == dsmin) then ! transform ds to dt in seconds
-              dt=dtmin  ! this makes dt more accurate
-           else
-              dt=ds*dxyz 
-           endif
-#endif /*regulardt*/
-           if(dt.lt.0.d0) then
-              print *,'dt=',dt
-              stop 49673
-           endif
-           ! === if time step makes the integration ===
-           ! === exceed the time when fiedls change ===
-           if(tss+dt/tseas*dble(iter).ge.dble(iter)) then
-              dt=dble(idint(ts)+1)*tseas-tt
-              tt=dble(idint(ts)+1)*tseas
-              ts=dble(idint(ts)+1)
-              tss=dble(iter)
-              ds=dt/dxyz
-              dsc=ds
-           else
-              tt=tt+dt
-#if defined regulardt
-              if(dt == dtmin) then
-                 ts=ts+dstep
-                 tss=tss+1.d0
-              elseif(dt == dtreg) then  
-                 ts=nint((ts+dtreg/tseas)*dble(iter))/dble(iter)
-!                 ts=ts+dtreg/tseas
-                 tss=dble(nint(tss+dt/dtmin))
-              else
-                 ts=ts+dt/tseas
-                 tss=tss+dt/dtmin
-              endif
-#else
-              if(dt == dtmin) then
-                 ts=ts+dstep
-                 tss=tss+1.d0
-              else
-                 ts =ts +dt/tseas
-                 tss=tss+dt/tseas*dble(iter)
-!                 tss=tss+dt/dtmin
-              endif
-#endif /*regulardt*/
-           end if
-           ! === time interpolation constant ===
-           rbg=dmod(ts,1.d0) 
-           rb =1.d0-rbg
-         end subroutine calc_time
-
-  subroutine fancyTimer(timerText ,testStr)
-    IMPLICIT NONE
-
-    CHARACTER (len=*)                          :: timerText ,testStr
-    REAL ,SAVE                                 :: fullstamp1 ,fullstamp2
-    REAL ,SAVE ,DIMENSION(2)                   :: timestamp1 ,timestamp2
-    REAL                                       :: timeDiff
-!!$    
-!!$    select case (trim(testStr))
-!!$    case ('start')
-!!$       WRITE (6, FMT="(A)", ADVANCE="NO") ,' - Begin '//trim(timerText)
-!!$       call etime(timestamp1,fullstamp1)
-!!$    case ('stop')
-!!$       call etime(timestamp2,fullstamp2)
-!!$       timeDiff=fullstamp2-fullstamp1
-!!$       write (6 , FMT="(A,F6.1,A)") ', done in ' ,timeDiff ,' sec'
-!!$    end select
-  end subroutine fancyTimer
-end subroutine loop
-
+  end subroutine writedata2

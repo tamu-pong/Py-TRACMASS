@@ -24,7 +24,6 @@ data hour /'0000','0600','1200','1800'/
 
 
 
-print *, 'SHAPE(uflux)', SHAPE(uflux)
 !_______________________ update the time counting ________________________________________
  ihour=ihour+6
  if(ihour.eq.24) then

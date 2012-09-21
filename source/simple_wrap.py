@@ -545,12 +545,14 @@ def write_mod_pyx_ty(pyx, mod, var, ty):
         pyx.write('        cdef %(ctype)s *loc\n' % ctx)
         pyx.write('        helper.fw_get_%(mod)s_%(var)s_loc(<size_t*>&loc)\n' % ctx)
 
+        pyx.write('        if loc == NULL: return None\n' % ctx)
         pyx.write('        cdef int _shape[%(ndim)i]\n' % ctx)
         pyx.write('        cdef numpy.npy_intp dims[%(ndim)i]\n' % ctx)
         pyx.write('        helper.fw_get_%(mod)s_%(var)s_shape(_shape)\n' % ctx)
         for i in range(ty.ndim):
             ctx['i'] = i
             pyx.write('        dims[%(i)i] = _shape[%(i)i]\n' % ctx)
+            pyx.write('        if _shape[%(i)i] == 0: return None\n' % ctx)
             
         npy_type_enum = {('INTEGER', None):'numpy.NPY_INT', 
                          ('REAL', None):'numpy.NPY_FLOAT',
@@ -567,12 +569,17 @@ def write_mod_pyx_ty(pyx, mod, var, ty):
         pyx.write('    def _get_%(var)s(self):\n' % ctx)
         pyx.write('        cdef %(ctype)s *loc\n' % ctx)
         pyx.write('        helper.fw_get_%(mod)s_%(var)s_loc(<size_t*>&loc)\n' % ctx)
-        pyx.write('        return loc[:%(length)i]\n' % ctx)
+        
+        pyx.write('        return loc[:helper.strnlen(loc, %(length)i)].decode()\n' % ctx)
             
         pyx.write('    def _set_%(var)s(self, value):\n' % ctx)
         pyx.write('        cdef %(ctype)s *loc\n' % ctx)
         pyx.write('        helper.fw_get_%(mod)s_%(var)s_loc(<size_t*>&loc)\n' % ctx)
-        pyx.write('        loc[:%(length)i] = value[:%(length)i]\n' % ctx)
+        #pyx.write('        loc[:%(length)i] = value[:%(length)i]\n' % ctx)
+        pyx.write('        val = value[:%(length)i].encode()\n' % ctx)
+        pyx.write('        for i,c in enumerate(val):\n' % ctx)
+        pyx.write('            loc[i] = ord(c)\n' % ctx)
+        
         pyx.write('    %(var)s = property(_get_%(var)s, _set_%(var)s)\n\n' % ctx)
     else:
         ctx['ctype'] = TY_LOOKUP[ty.name, ty.size]
@@ -724,7 +731,10 @@ def main():
     header = args.c_header
     pxd = args.pxd
     pyx = args.pyx
+    
     pxd.write('cimport numpy\n')
+    pxd.write('cdef extern from "string.h":\n')
+    pxd.write('    size_t strnlen(char *, size_t)\n\n')
     pxd.write('cdef extern from "Python.h":\n')
     pxd.write('    cdef struct PyTypeObject:\n')
     pxd.write('        pass\n')
@@ -736,6 +746,8 @@ def main():
     pyx.write('cimport numpy\n')
     pyx.write('import numpy\n')
     pyx.write('cimport %s as helper\n\n' % basename(splitext(pxd.name)[0]))
+    pyx.write('modules = []\n\n' )
+    
     header.write('#include "fortran_defines.h"\n\n')
 
     for mod in all_modules:
@@ -746,6 +758,10 @@ def main():
         helper.write('! Wrapper helper for module %s \n' % mod[0])
         
         pyx.write('class _%s_(object):\n\n' % (mod[0].upper()))
+#        pyx.write('    def __setattr__(self, attr, value):\n        raise AttributeError("fortran module %s has no attribute %%r" %% (attr,))\n\n' % (mod[0].lower(),))
+        pyx.write('    modname = "%s"\n\n' %(mod[0].lower(),))
+        
+        pyx.write('    __slots__ = ()\n\n')
         
         for var, ty in mod[1].items():
             write_helper(helper, mod, var, ty)
@@ -767,6 +783,7 @@ def main():
             pyx.write('    pass\n\n')
         pyx.write('\n')
         pyx.write('%s = _%s_()\n\n' % (mod[0].lower(), mod[0].upper()))
+        pyx.write('modules.append(%s)\n\n' % (mod[0].lower(),))
         
     for sub in all_subroutines:
         try:

@@ -9,6 +9,7 @@ from tracmass import _tracmass as tm
 from os.path import abspath, join, curdir
 import math
 import numpy as np
+from tracmass.utils import print_state
     
 def readfields():
     param = tm.mod_param
@@ -19,13 +20,8 @@ def readfields():
     vel = tm.mod_vel
     tm.mod_dens
     
-    time.ints = time.intstart
-#    tm.mod_stat
-#    tm.tes_readfields()
-#    
-#    import pickle
-#    pickle.dump(vel.uflux, open('vel.uflux-orig.picle', 'w'))
-#    return 
+    tm.tes_readfields()
+    return 
     
     time.ihour = time.ihour + 6
     if time.ihour == 24:
@@ -218,7 +214,7 @@ def main():
     print "tm.time.intend", tm.mod_time.intend
     tm.init_seed()
     
-    filename = abspath(join(curdir, 'results-new', 'data'))
+    filename = abspath(join(curdir, 'results-old', 'data'))
         
     print "filename", filename
     print "tm.mod_seed.nqua", tm.mod_seed.nqua
@@ -238,9 +234,8 @@ def main():
     
     tm.loop.readfields = readfields
     
-    tm.loop.readfields()
-#    tm.loop()
-    
+#    print_state()
+    tm.loop()
     print "Done!"
     
 if __name__ == '__main__':

@@ -244,9 +244,182 @@ SUBROUTINE init_params
          kst2 = KM
       END IF
 
+      call init_arrays()
+
+END SUBROUTINE init_params
+
+
+SUBROUTINE init_params2
+!!----------------------------------------------------------------------------
+!!
+!!
+!!       SUBROUTINE: init_params
+!!
+!!          Loads parameters from the namelists run.in and grid.in
+!!          Allocates matrices for trajectory data, GCM fields,
+!!          and Lagrangian stream functions.
+!!
+!!
+!!
+!!
+!!----------------------------------------------------------------------------
+   USE mod_param
+   USE mod_seed
+   USE mod_coord
+   USE mod_grid
+   USE mod_name
+   USE mod_time 
+   USE mod_domain
+   USE mod_vel
+   USE mod_traj
+   USE mod_dens
+   USE mod_buoyancy
+   USE mod_streamxy
+   USE mod_streamv
+   USE mod_streamr
+   USE mod_stream_thermohaline
+   USE mod_tracer
+   USE mod_getfile
+   
+#if defined diffusion || turb 
+   USE mod_diffusion
+#endif
+#ifdef sediment
+   USE mod_orbital
+   USE mod_sed
+#endif
+   IMPLICIT NONE
+   
+   INTEGER                                    ::  argint1 ,argint2
+   INTEGER                                    ::  dummy ,factor ,i ,dtstep
+   INTEGER                                    ::  gridVerNum ,runVerNum
+   CHARACTER (LEN=30)                         ::  inparg, argname
+   CHARACTER (LEN=23)                         ::  Project, Case
+   CHARACTER (LEN=200)                        ::  projdir, ormdir
+
+   real*8                                     :: jd
+
+   SELECT CASE (subGrid)
+   CASE (0)          
+      PRINT *,'Use the Full grid.'     
+      subGridImin =   1
+      subGridJmin =   1
+      subGridImax = imt
+      subGridJmax = jmt 
+   CASE (1)
+      PRINT *,'Use a subgrid: ', subGridImin ,subGridImax, &
+           &   subGridJmin ,subGridJmax
+      imt = subGridImax-subGridImin+1
+      jmt = subGridJmax-subGridJmin+1
+   CASE default
+      PRINT *,'==================== ERROR ===================='
+      PRINT *,'This subGrid selection is not implemented yet.'
+      PRINT *,'subGrid = ' ,subGrid
+      STOP
+   END SELECT
+         start1d  = [  1]
+         count1d  = [ km]
+         start2d  = [  1 ,  1 ,subGridImin ,subGridJmin]
+         count2d  = [  1 ,  1 ,subGridImax ,subGridJmax]
+         start3d  = [  1, subGridImin, subGridJmin,  1]
+         count3d  = [  1, subGridImax, subGridJmax, km]
+
+      timax    =  24.*3600.*timax ! convert time lengths from days to seconds
+      dstep    =  1.d0/dble(iter)
+      dtmin    =  dstep * tseas
+      baseJD   =  jdate(baseYear  ,baseMon  ,baseDay)
+      startJD  =  jdate(startYear ,startMon ,startDay) + 1 + &  
+           ( dble((startHour)*3600 + startMin*60 + startSec) / 86400 ) -baseJD
+      IF ((IARGC() > 1) )  THEN
+         ARG_INT1 = 0.1
+         CALL getarg(2,inparg)
+         if ( ARG_INT1 == 0) then
+            read( inparg, '(i15)' ) ARG_INT1
+         else
+            read( inparg, '(f15.10)' ) ARG_INT1
+         end if
+      END IF
+    
+      IF ((IARGC() > 2) ) THEN
+          ARG_INT2 = 0.1
+         CALL getarg(3,inparg)
+         if ( ARG_INT2 == 0) then
+            read( inparg, '(i15)' ) ARG_INT2
+         else
+            read( inparg, '(f15.10)' ) ARG_INT2
+         end if
+      END IF
+
+      startYearCond: IF (startYear /= 0) THEN
+         IF (ngcm >= 24) THEN 
+            intmin      = (startJD)/(ngcm/24)+1
+         ELSE ! this needs to be verified
+            intmin      = (24*startJD)/ngcm+3-ngcm
+         END IF
+      END IF startYearCond
+
+      ! tseas - the time step between data sets in [s]
+      tseas= dble(ngcm)*3600.d0
+
+      ! --- ist -1 to imt ---
+      IF ( ist1 == -1) THEN 
+         ist1 = IMT
+      END IF
+      IF ( ist2 == -1) THEN 
+         ist2 = IMT
+      END IF
+      
+      ! --- jst -1 to jmt ---
+      IF ( jst1 == -1) THEN
+         jst1=jmt
+      END IF
+      IF ( jst2 == -1) THEN
+         jst2=jmt
+      END IF
+    
+      ! --- kst -1 to km ---
+      IF ( kst1 == -1) THEN
+         kst1 = KM
+      END IF
+      IF ( kst2 == -1) THEN 
+         kst2 = KM
+      END IF
+
+      call init_arrays()
+
+END SUBROUTINE init_params2
+
 !!---------------------------------------------------------------------------
 !!------------------------ A L L O C A T I O N S ----------------------------
 !!---------------------------------------------------------------------------
+SUBROUTINE init_arrays
+
+   USE mod_param
+   USE mod_seed
+   USE mod_coord
+   USE mod_grid
+   USE mod_name
+   USE mod_time 
+   USE mod_domain
+   USE mod_vel
+   USE mod_traj
+   USE mod_dens
+   USE mod_buoyancy
+   USE mod_streamxy
+   USE mod_streamv
+   USE mod_streamr
+   USE mod_stream_thermohaline
+   USE mod_tracer
+   USE mod_getfile
+   
+#if defined diffusion || turb 
+   USE mod_diffusion
+#endif
+#ifdef sediment
+   USE mod_orbital
+   USE mod_sed
+#endif
+   IMPLICIT NONE
 
       ! --- Allocate information about the coordinates and grid ---
 
@@ -319,7 +492,7 @@ SUBROUTINE init_params
       ALLOCATE (orb(km) )
 #endif
 
-END SUBROUTINE init_params
+END SUBROUTINE init_arrays
 
 !!----------------------------------------------------------------------------
 !!----------------------------------------------------------------------------
