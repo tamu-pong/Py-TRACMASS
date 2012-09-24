@@ -234,8 +234,9 @@ def main():
     
     tm.loop.readfields = readfields
     
-#    print_state()
-    tm.loop()
+    
+    print_state()
+#    tm.loop()
     print "Done!"
     
 if __name__ == '__main__':

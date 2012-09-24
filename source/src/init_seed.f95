@@ -17,6 +17,28 @@
 !!
 !!------------------------------------------------------------------------------
 
+SUBROUTINE allocate_seed(num_particles)
+   USE mod_seed
+   USE mod_time
+   USE mod_param
+
+   IMPLICIT NONE
+   
+   INTEGER :: num_particles
+   
+    nsd = num_particles
+    nsdmax = num_particles
+    !nsdtim = num_particles 
+    ntracmax = num_particles
+    num = num_particles
+
+   ALLOCATE ( seed_ijk(num_particles, 3), seed_xyz(num_particles, 3), seed_set(num_particles, 2) )
+   seed_ijk = 0
+   seed_xyz = 0
+   seed_set = 0
+    
+END SUBROUTINE allocate_seed
+
 SUBROUTINE init_seed()
   
    USE mod_seed
@@ -218,7 +240,6 @@ SUBROUTINE init_seed()
   
      
    END SELECT
-   
    
    SELECT CASE (seedTime)
   

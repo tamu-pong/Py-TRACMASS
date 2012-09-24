@@ -1008,7 +1008,7 @@ return
 end subroutine loop
 
 
-  subroutine writedata2(sel, t0, temp, x1, y1, z1, niter, salt, dens, err)
+  subroutine writedata2(sel, t0, temp, x1, y1, z1, niter, salt, dens)
 
   USE mod_param
   USE mod_name

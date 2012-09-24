@@ -56,7 +56,9 @@ CONTAINS
                                                 & vol, subvol
 
 !!------------------------------------------------------------------------------
-
+      print *,"  "
+      print *,"  "
+      print *,"  ==== SEED ===", tt,ts
       ! --------------------------------------------
       ! --- Check if ntime is in vector seed_tim ---
       ! --------------------------------------------
@@ -76,6 +78,7 @@ CONTAINS
       ! ---------------------------------------
       ! --- Loop over the seed size, nsdMax ---
       !----------------------------------------
+      
       startLoop: DO jsd=1,nsdMax
          iist  = seed_ijk (jsd,1)
          ijst  = seed_ijk (jsd,2)
@@ -209,6 +212,9 @@ CONTAINS
          ! --------------------------------------------------
          ! --- Determine start position for each particle ---
          ! --------------------------------------------------
+         print *,"                 --------"
+         print *, "ijt", ijt
+         print *, "ikt", ikt
          ijjLoop: DO jjt=1,ijt
             kkkLoop: DO jkt=1,ikt          
             
@@ -218,7 +224,8 @@ CONTAINS
             ib = iist
             jb = ijst
             kb = ikst
-
+            print *, "isec", isec
+            
             SELECT CASE (isec)
                CASE (1)   ! Meridional-vertical section
                   
@@ -301,6 +308,7 @@ CONTAINS
                ! ------------------------------------------------------------
                ! --- Put the new trajectory into the matrices trj and nrj ---
                ! ------------------------------------------------------------
+               print *, "seed", x1, y1, z1
                trj(ntrac,1:7) = [ x1, y1, z1, tt,    subvol, 0.d0, tt ]
                nrj(ntrac,1:5) = [ ib, jb, kb,  0, IDINT(ts)]
                nrj(ntrac,7)=1

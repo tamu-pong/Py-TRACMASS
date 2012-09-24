@@ -36,7 +36,7 @@ mod_time:
     # === Trajectory release period (timesteps) ===
     intspin : 1    # one single snapshot
     # === Number of timesteps for the run.      ===
-    intrun  : 50
+    intrun  : 5
     #intrun  : 14600,
     # === Pos if forward  neg if backward       ===
     intstep : 1
@@ -114,7 +114,7 @@ mod_seed:
   kst1 : 5
   kst2 : 5
   varSeedFile : 0
-  seedFile    : 'mask?'
+  seedFile    : 'seedfile.txt'
   #
   #
 mod_buoyancy:

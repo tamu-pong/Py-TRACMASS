@@ -13,6 +13,8 @@ setup(
       entry_points={
         'console_scripts': [
             'tracmass = tracmass.scripts.main:main',
+            'tracmass_run = tracmass.scripts.run2:main',
+            'tracmass_seed = tracmass.scripts.seed2:main',
         ],
     },
 

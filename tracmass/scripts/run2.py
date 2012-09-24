@@ -1,10 +1,13 @@
 '''
-Created on Sep 21, 2012
+Created on Sep 24, 2012
 
 @author: sean
 '''
-from argparse import ArgumentParser, FileType
-from tracmass.utils import read_params, print_state
+from argparse import ArgumentParser
+from tracmass.projects import get_projects
+import netCDF4
+import numpy as np
+from tracmass.utils import read_params
 from tracmass import _tracmass as tm
 
 def setup():
@@ -35,57 +38,42 @@ def setup():
     tm.fortran_file(59, filename + '_err.asc')       # Error position
     
 def main():
-    
     parser = ArgumentParser()
-    parser.add_argument('-r', '--run-params', type=FileType('r'))
-    parser.add_argument('-g', '--grid-params', type=FileType('r'))
-    parser.add_argument('-s', '--set', nargs=2, action='append')
-    parser.add_argument('--seed')
-    parser.add_argument('--exit')
-    parser.add_argument('--path')
-    parser.add_argument('--start')
-    parser.add_argument('--end')
-    parser.add_argument('--delta-hours')
-    parser.add_argument('--delta-minutes')
-    parser.add_argument('--delta-seconds')
-    parser.add_argument('--print-state', action='store_true')
+    parser.add_argument('--seed', required=True)
+    
+    subparsers = parser.add_subparsers(help='sub-command help')
+    
+    for name, project in get_projects():
+        sub_parser = subparsers.add_parser(name)
+        project.commandline_args(sub_parser)
     
     args = parser.parse_args()
     
-    read_params(args.run_params)
-    read_params(args.grid_params)
+    prj = args.project(args)
+    
+    dataset = netCDF4.Dataset(args.seed, 'r')
+    locations = dataset.variables['locations']
+    
+    
+    read_params(open('tes_run.yaml'))
+    read_params(open('tes_grid.yaml'))
     
     tm.init_params2()
     tm.coordinat()
     setup()
     
-    
     tm.mod_grid.kmt[:] = tm.mod_param.km
     
-    tm.allocate_seed(1)
+    tm.allocate_seed(locations.shape[0])
     tm.mod_seed.isec = 5
     tm.mod_seed.seed_ijk[:,:] = 2 
-    tm.mod_seed.seed_xyz[:,:] = [[9.125,  49.125, 4.5]] 
+    tm.mod_seed.seed_xyz[:,:] = locations
     tm.mod_seed.seed_set[:] = [tm.mod_seed.isec, tm.mod_seed.idir] 
 
-    if args.print_state:
-        print_state()
-        return
-    
-    print tm.mod_traj.trj.shape
-    print tm.mod_traj.trj[:1,:]
-    
-    def writedata(*args):
-        print tm.mod_traj.trj[:1,:]
-        print tm.writedata2(*args)
-        
-    tm.loop.writedata = tm.writedata2
-    tm.loop.readfields = tm.tes_readfields
-    
+
     tm.loop()
-    
-    print "Done!"
-    
+
     
 if __name__ == '__main__':
     main()
+
