@@ -3,43 +3,43 @@ Created on Sep 24, 2012
 
 @author: sean
 '''
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
 from tracmass.projects import get_projects
 import netCDF4
 import numpy as np
 from tracmass.utils import read_params
 from tracmass import _tracmass as tm
 
-def setup():
+from datetime import datetime, timedelta
+
+TIME_FMT1 =  '%d/%m/%Y'
+TIME_FMT =  '%d/%m/%Y-%H:%M:%S'
+
+def timedeltatype(key):
+    def TimeDelta(arg):
+        return timedelta(**{key:float(arg)})
+    return TimeDelta
+
+def timetype(arg):
+    try:
+        return datetime.strptime(arg, TIME_FMT1)
+    except ValueError as err:
+        pass
     
-    if tm.mod_seed.nff == 1: #Forward
-        tm.mod_time.intstart = tm.mod_time.intmin          
-        tm.mod_time.intend = tm.mod_time.intmax
-    else: #Backward
-        tm.mod_time.intstart = tm.mod_time.intmin          
-        tm.mod_time.intend = tm.mod_time.intmax
-    
-    tm.mod_grid.kmt[:] = tm.mod_param.km
-    from os.path import abspath, join, curdir
-     
-    filename = abspath(join(curdir, 'results-new', 'data'))
-        
-    if tm.mod_seed.nqua == 1:  # number of trajectories (per time resolution)
-        # num=NTRACMAX
-        tm.mod_seed.num = tm.mod_param.partquant
-    elif tm.mod_seed.nqua == 2: 
-        tm.mod_param.voltr = tm.mod_param.partquant 
-    elif tm.mod_seed.nqua == 3: 
-        tm.mod_param.voltr = tm.mod_param.partquant
-    
-    tm.fortran_file(56, filename + '_run.asc')       # trajectory path
-    tm.fortran_file(57, filename + '_out.asc')       # exit position
-    tm.fortran_file(58, filename + '_in.asc')        # entrance position
-    tm.fortran_file(59, filename + '_err.asc')       # Error position
+    try:
+        return datetime.strptime(arg, TIME_FMT)
+    except ValueError as err:
+        raise ArgumentTypeError(err.message)
+
     
 def main():
+    
     parser = ArgumentParser()
     parser.add_argument('--seed', required=True)
+    parser.add_argument('--start', type=timetype)
+    parser.add_argument('--end', type=timetype)
+    parser.add_argument('--delta-hours', type=timedeltatype('hours'), default=timedelta(hours=0))
+    parser.add_argument('--delta-days', type=timedeltatype('days'), default=timedelta(days=0))
     
     subparsers = parser.add_subparsers(help='sub-command help')
     
@@ -58,20 +58,11 @@ def main():
     read_params(open('tes_run.yaml'))
     read_params(open('tes_grid.yaml'))
     
-    tm.init_params2()
-    tm.coordinat()
-    setup()
+    prj.setup_tracmass(locations)
     
-    tm.mod_grid.kmt[:] = tm.mod_param.km
-    
-    tm.allocate_seed(locations.shape[0])
-    tm.mod_seed.isec = 5
-    tm.mod_seed.seed_ijk[:,:] = 2 
-    tm.mod_seed.seed_xyz[:,:] = locations
-    tm.mod_seed.seed_set[:] = [tm.mod_seed.isec, tm.mod_seed.idir] 
 
 
-    tm.loop()
+#    tm.loop()
 
     
 if __name__ == '__main__':

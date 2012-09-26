@@ -19,8 +19,22 @@ class Tes(Project):
            
         '''
         parser.add_argument('--grid')
+        parser.add_argument('--run')
         parser.set_defaults(project=cls)
         
+        
+    def __init__(self, args):
+        Project.__init__(self, args)
+        
+        from os.path import abspath, join, curdir
+        filename = abspath(join(curdir, 'results-new', 'data'))
+        
+        tm.fortran_file(56, filename + '_run.asc')       # trajectory path
+        tm.fortran_file(57, filename + '_out.asc')       # exit position
+        tm.fortran_file(58, filename + '_in.asc')        # entrance position
+        tm.fortran_file(59, filename + '_err.asc')       # Error position
+    
+    
     def seed(self, args):
         '''
         Seed should return an array of particles. coords are in lat, lon, with optional depth
