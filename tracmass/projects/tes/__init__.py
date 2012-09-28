@@ -23,8 +23,8 @@ class Tes(Project):
         parser.set_defaults(project=cls)
         
         
-    def __init__(self, args):
-        Project.__init__(self, args)
+    def __init__(self, start, end, delta):
+        Project.__init__(self, start, end, delta)
         
         from os.path import abspath, join, curdir
         filename = abspath(join(curdir, 'results-new', 'data'))

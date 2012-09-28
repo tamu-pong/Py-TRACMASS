@@ -6,28 +6,28 @@ from tracmass import _tracmass as tm
 
 class Project(object):
     
-    def __init__(self, args):
+    def __init__(self, start, end, delta):
         
         self.times = times = []
         
-        delta = args.delta_days + args.delta_hours
-         
         if not delta:
             raise Exception('Time delta can not be zero!')
-        forward = self.args.start < self.args.end
+        forward = start < end
         
         if forward:
-            dt = args.start
-            while dt <= args.end:
+            dt = start
+            while dt <= end:
                 times.append(dt)
                 dt += delta
         else:
-            dt = args.end
-            while dt >= args.start:
+            dt = end
+            while dt >= start:
                 times.append(dt)
                 dt -= delta
-        
-        self.args = args
+                
+        self.start = start
+        self.end = end
+        self.delta = delta
         
     def setup_tracmass(self, seed_locations):
         
@@ -43,16 +43,16 @@ class Project(object):
         
         tm.mod_time.intrun = len(self.times)
         
-        if self.args.start > self.args.end: #Backward 
+        if self.start > self.end: #Backward 
             self.mod_seed.nff = 2
             self.mod_time.intstep = -1
-            tm.mod_time.intstart = self.args.end.toordinal()
-            tm.mod_time.intend = self.args.start.toordinal() 
+            tm.mod_time.intstart = self.end.toordinal()
+            tm.mod_time.intend = self.start.toordinal() 
         else: #Forward
-            self.mod_time.intstep = 1
-            self.mod_seed.nff = 1
-            tm.mod_time.intstart = self.args.start.toordinal()   
-            tm.mod_time.intend = self.args.end.toordinal()
+            tm.mod_time.intstep = 1
+            tm.mod_seed.nff = 1
+            tm.mod_time.intstart = self.start.toordinal()   
+            tm.mod_time.intend = self.end.toordinal()
         
         tm.mod_grid.kmt[:] = tm.mod_param.km
             
@@ -73,7 +73,6 @@ class Project(object):
         tm.mod_seed.seed_set[:] = [tm.mod_seed.isec, tm.mod_seed.idir] 
 
 
-    
     @classmethod
     def commandline_args(cls, parser):
         '''
@@ -81,6 +80,10 @@ class Project(object):
         '''
         parser.set_defaults(project=cls)
 
+    def run(self):
+        tm.loop()
+        
+        
 __all__ = ['get_commands']
 
 def command_names():
