@@ -10,6 +10,8 @@ setup(
       name='tracmass',
       version='dev',
       packages=find_packages(),
+      
+      install_requires = ['cython', 'numpy'],
       entry_points={
         'console_scripts': [
             'tracmass = tracmass.scripts.main:main',
@@ -17,5 +19,4 @@ setup(
             'tracmass_seed = tracmass.scripts.seed2:main',
         ],
     },
-
 )
