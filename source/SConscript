@@ -3,32 +3,39 @@ import os
 #===============================================================================
 # 
 #===============================================================================
+
+vars = Variables(None)
+
+vars.Add('M32', 'true if this is a 32 bit install', False)
+vars.Add('F95', 'fortran 95 compiler')
+
 CPPDEFINES = [('PROJECT_NAME', '\\\'$PROJECT_NAME\\\''), ('CASE_NAME', '\\\'$PROJECT_NAME\\\''), ('ARG_INT1', 'intmin'), ('ARG_INT2', 'intrun'),
                'timestep', 'textwrite', 'zvec1D', '$PROJECT_NAME']
 
-F95FLAGS = ['$_CPPDEFFLAGS', '-fno-underscoring', '-x', 'f95-cpp-input', '-fconvert=big-endian', '-gdwarf-2', '-fbounds-check', '-O0', '-g3','-J', Dir('.')]
+F95FLAGS = ['$_M32', '$_CPPDEFFLAGS', '-fno-underscoring', '-x', 'f95-cpp-input', '-fconvert=big-endian', '-gdwarf-2', '-fbounds-check', '-O0', '-g3', '-J', Dir('.')]
 
 #===============================================================================
 # 
 #===============================================================================
 import numpy
+
 CPPPATH = [numpy.get_include(), 'ext'] 
-env = Environment(tools=['default', 'distutils', 'cython'])
-env.AppendUnique(CPPPATH=CPPPATH, CFLAGS=['-O0', '-g3'])
-#py_tracmass = env.Cython('ext/tracmass.pyx')
-
-#params_obj = env.SharedObject(py_tracmass)
-
+env = Environment(tools=['default', 'distutils', 'cython'], variables=vars, _M32='${"-m32" if M32 else ""}')
+env.AppendUnique(CPPPATH=CPPPATH, CFLAGS=['-O0', '-g3', '$_M32', ], LDMODULEFLAGS=['$_M32'])
 
 #===============================================================================
 # 
 #===============================================================================
-fortran_env = Environment(ENV= {'PATH':os.environ['PATH']})
+fortran_env = Environment(ENV={'PATH':os.environ['PATH']}, variables=vars, _M32='${"-m32" if M32 else ""}')
+print 
+print fortran_env['F95COM']
+print 
+
 fortran_env.AppendUnique(PROJECT_NAME='tes', CPPDEFINES=CPPDEFINES, F95FLAGS=F95FLAGS)
 f95_src = Glob('src/*.f95')
 
 fortran_env.Command(['fhelper.f95', 'cheader.h', 'helper.pxd', '_tracmass.pyx'], ['simple_wrap.py', 'ext/pyx_tail.pyx', f95_src],
-                    './$SOURCE ${SOURCES[2:]} -f ${TARGETS[0]} -c ${TARGETS[1]} --pxd ${TARGETS[2]} --pyx ${TARGETS[3]} --pyx-tail  ${SOURCES[1]}  ${_CPPDEFFLAGS} --ignore-module mod_stat')
+                    './$SOURCE --pointer-size=${"4" if M32 else "8"} ${SOURCES[2:]} -f ${TARGETS[0]} -c ${TARGETS[1]} --pxd ${TARGETS[2]} --pyx ${TARGETS[3]} --pyx-tail  ${SOURCES[1]}  ${_CPPDEFFLAGS} --ignore-module mod_stat')
 
 pyx_helper = env.Cython('_tracmass.pyx')
 Depends(pyx_helper, ['helper.pxd', 'ftracmass.pxd'])
@@ -39,7 +46,6 @@ f_helper = fortran_env.SharedObject('fhelper.f95')
 f_tm = fortran_env.SharedObject('ext/ftracmass.f95')
 
 
-#ftracmass_helper = fortran_env.SharedObject('ext/ftracmass.f95')
 tes_readfield = fortran_env.SharedObject('projects/tes/tes_readfield.f95')
 
 objects_modules = fortran_env.SharedObject(f95_src)
@@ -50,7 +56,6 @@ Depends('src/loop.os', ['mod_pos.mod'])
 Depends('src/loop_pos.os', ['mod_psi.mod'])
 Depends('src/coord.os', ['mod_param.mod'])
 Depends('src/init_par.os', ['mod_seed.mod'])
-#fortran_env.Depends(ftracmass_helper, ['mod_time.mod'])
 
 objects = [obj for obj in objects_modules if obj.suffix == '.os']
 modules = [obj for obj in objects_modules if obj.suffix == '.mod']
@@ -62,6 +67,5 @@ modules = [obj for obj in objects_modules if obj.suffix == '.mod']
 env.LoadableModule('_tracmass.so', [f_helper, objects, tes_readfield, pyx_helper_c, f_tm])
 
 
-#env.Program('cmain', ['test.f95','cmain.c'])
 
 

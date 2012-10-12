@@ -682,11 +682,11 @@ def write_header_sub(header, sub):
     header.write('void fw_%(sub)s(%(args)s);\n' % ctx)
     
 
-def write_helper(helper, mod, var, ty):
+def write_helper(helper, mod, var, ty, pointer_size):
     helper.write('\n\n ! variable %s \n' % var)
     helper.write('SUBROUTINE get_%s_%s_loc(location)\n' % (mod[0], var))
     helper.write('    USE %s\n' % mod[0])
-    helper.write('    INTEGER*8, INTENT(OUT) :: location\n')
+    helper.write('    INTEGER*%i, INTENT(OUT) :: location\n' % pointer_size)
     helper.write('    location = LOC(%s)\n' % var)
     helper.write('END SUBROUTINE get_%s_%s_loc\n' % (mod[0], var))
     if ty.ndim:
@@ -712,6 +712,7 @@ def main():
     parser.add_argument('--ignore-mod-subroutine', nargs=2, action='append', default=[])
     parser.add_argument('--ignore-mod-var', nargs=2, action='append', default=[])
     parser.add_argument('--ignore-subroutine', action='append', default=[])
+    parser.add_argument('--pointer-size', type=int, default=8)
     
     args = parser.parse_args()
     
@@ -764,7 +765,7 @@ def main():
         pyx.write('    __slots__ = ()\n\n')
         
         for var, ty in mod[1].items():
-            write_helper(helper, mod, var, ty)
+            write_helper(helper, mod, var, ty, args.pointer_size)
             write_mod_header_ty(header, mod, var, ty)
             write_mod_pxd_ty(pxd, mod, var, ty)
             write_mod_pyx_ty(pyx, mod, var, ty)
