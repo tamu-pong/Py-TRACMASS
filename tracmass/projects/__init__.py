@@ -38,6 +38,7 @@ class Project(object):
         tm.mod_param.lbt = 1
         tm.mod_param.nend = tm.mod_param.lbt + 1
         
+        tm.mod_param.ntracmax = seed_locations.shape[0]
         tm.init_params2()
         tm.coordinat()
         
