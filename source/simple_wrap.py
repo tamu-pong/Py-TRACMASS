@@ -177,6 +177,8 @@ class FortranType(object):
     def ndim(self, value):
         self._ndim = value
         
+        
+KIND_RE = re.compile('^\(kind=(.*?)\)$', re.IGNORECASE)
 
 def get_type(type_spec_list):
     assert type_spec_list
@@ -188,6 +190,7 @@ def get_type(type_spec_list):
     assert type_name.type == 'TYPE', type_name
     ty.name = type_name.value
     
+    
     if namespec:
         item = namespec.pop(0)
         if item.type == 'TIMES':
@@ -196,6 +199,12 @@ def get_type(type_spec_list):
             ty.size = int(type_size.value)
         elif item.type == 'DIMLEN':
             ty.length = item.length 
+        elif item.type == 'DIMSHAPE' and KIND_RE.match(item.value):
+            value = KIND_RE.match(item.value).groups()[0]
+            if value.lower() == 'dp':
+                ty.size = 8
+            else:
+                ty.size = int(value)
         else:
             assert False, item
 

@@ -1,33 +1,33 @@
-mod_name:
-    caseName     : 'Academic'
-    caseDesc     : 'Rectangular ocean'
-  
-    #outDataDir   : '/Users/sean/Documents/workspace/tracmass/results/',
-    outDataDir   : '/Users/sean/Documents/workspace/py-tracmass2/results-new/'
-    #outDataFile     ='analyt1e'/
-    outDataFile     : 'timestep1000e'
-    #
-    intminInOutFile : 0
-
+# mod_name:
+    # caseName     : 'Academic'
+    # caseDesc     : 'Rectangular ocean'
+#   
+    # #outDataDir   : '/Users/sean/Documents/workspace/tracmass/results/',
+    # outDataDir   : '/Users/sean/Documents/workspace/py-tracmass2/results-new/'
+    # #outDataFile     ='analyt1e'/
+    # outDataFile     : 'timestep1000e'
+    # #
+    # intminInOutFile : 0
+# 
 mod_grid:
-    #
-    #==subGrid:  0 : Use full grid.
-    #==               1 : Define subGrid in this file.
-    #==               2 : Define subGrid with sep. file and subGridID.
-    #==               3 : Define subGrid with sep. file and MPI.
+    # #
+    # #==subGrid:  0 : Use full grid.
+    # #==               1 : Define subGrid in this file.
+    # #==               2 : Define subGrid with sep. file and subGridID.
+    # #==               3 : Define subGrid with sep. file and MPI.
     subGrid : 0
-    #
-    # === Used if SubGrid : 1
-    subGridImin  : 500
-    subGridImax  : 1000
-    subGridJmin  : 400
-    subGridJmax  : 1000
-    # === Used if SubGrid : 2 or 3
-    SubGridFile  : '/Users/sean/Documents/workspace/tracmass/results/templ.asc'
-    # === Used if SubGrid : 2
-    subGridID    : 1
-    #
-    #
+    # #
+    # # === Used if SubGrid : 1
+    # subGridImin  : 500
+    # subGridImax  : 1000
+    # subGridJmin  : 400
+    # subGridJmax  : 1000
+    # # === Used if SubGrid : 2 or 3
+    # SubGridFile  : '/Users/sean/Documents/workspace/tracmass/results/templ.asc'
+    # # === Used if SubGrid : 2
+    # subGridID    : 1
+    # #
+    # #
 mod_time:
     # === Startval for initial dataset          ===
     
@@ -44,11 +44,11 @@ mod_time:
 
     #
     # === Start time for this run
-    startHour         : 0
-    startDay          : 1
-    startMon          : 1
-    startYear         : 1989
-    #
+    # startHour         : 0
+    # startDay          : 1
+    # startMon          : 1
+    # startYear         : 1989
+    # #
     #
 
     

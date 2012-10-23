@@ -17,52 +17,52 @@ MODULE mod_param
 #endif
   INTEGER                                   :: ncoor,kriva,iter,ngcm,ntrac
   INTEGER                                   :: twritetype = 0
-  REAL*8                                    :: tseas,tyear,dtmin,voltr
-  REAL*8                                    :: tstep,dstep,tss,partQuant
-  REAL*8, PARAMETER                         :: UNDEF=1.d20 
+  REAL(kind=8)                                    :: tseas,tyear,dtmin,voltr
+  REAL(kind=8)                                    :: tstep,dstep,tss,partQuant
+  REAL(kind=8), PARAMETER                         :: UNDEF=1.d20 
 ENDMODULE mod_param
 
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
-MODULE mod_precdef		! Precision definitions
-  INTEGER, PARAMETER		         :: DP = SELECTED_REAL_KIND(15, 307)
+MODULE mod_precdef ! Precision definitions
+  INTEGER, PARAMETER          :: DP = SELECTED_REAL_KIND(15, 307)
 ENDMODULE mod_precdef
 
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
 MODULE mod_coord
-  REAL*8                                    :: dx,dy
-  REAL*8                                    :: dxdeg,dydeg,stlon1,stlat1
-  REAL*8, PARAMETER                         :: grav=9.81, &
+  REAL(kind=8)                                    :: dx,dy
+  REAL(kind=8)                                    :: dxdeg,dydeg,stlon1,stlat1
+  REAL(kind=8), PARAMETER                         :: grav=9.81, &
   &                                            PI = 3.14159265358979323846d0, &
   &                                            radius = 6371229.d0, &
   &                                            radian = pi/180.d0,  &
   &                                            deg=radius*radian,   &
   &                                            tday=24.d0 * 3600.d0
 #ifdef ifs
-  REAL*8, PARAMETER                         :: R_d = 287.05d0, &
+  REAL(kind=8), PARAMETER                         :: R_d = 287.05d0, &
   &                                            L_v = 2.5d0 * 1e+6,   &
   &                                            c_d = 1004.d0
 #endif
-  REAL*8, ALLOCATABLE, DIMENSION(:)         :: zw
-  REAL*8, ALLOCATABLE, DIMENSION(:)         :: csu,cst,dyt,phi
+  REAL(kind=8), ALLOCATABLE, DIMENSION(:)         :: zw
+  REAL(kind=8), ALLOCATABLE, DIMENSION(:)         :: csu,cst,dyt,phi
   INTEGER, DIMENSION(12,1000:3000) :: idmax
 ENDMODULE mod_coord
 
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
 MODULE mod_diff
-	INTEGER                             :: dummy	
+INTEGER                             :: dummy
 ENDMODULE mod_diff
 
 MODULE mod_loopvars
-  REAL*8                                     :: rr, rb, rg, rbg
-  REAL*8                                     :: ds, dsmin
-  REAL*8                                     :: dse, dsw, dsn, dss
-  REAL*8                                     :: dsu, dsd, dsc
+  REAL(kind=8)                                     :: rr, rb, rg, rbg
+  REAL(kind=8)                                     :: ds, dsmin
+  REAL(kind=8)                                     :: dse, dsw, dsn, dss
+  REAL(kind=8)                                     :: dsu, dsd, dsc
   LOGICAL                                    :: scrivi
-  REAL*8                                     :: ts,tt
-  REAL*8                                     :: dxyz
-  REAL*8                                     :: ss0
+  REAL(kind=8)                                     :: ts,tt
+  REAL(kind=8)                                     :: dxyz
+  REAL(kind=8)                                     :: ss0
   INTEGER                                    :: lbas
-  REAL*8                                     :: subvol
+  REAL(kind=8)                                     :: subvol
 ENDMODULE mod_loopvars
 
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
@@ -78,11 +78,11 @@ MODULE mod_time
   INTEGER                                   :: iyear ,imon ,iday ,ihour
   INTEGER                                   :: iyear0 ,imon0 ,iday0 
   INTEGER                                   :: yearmin ,yearmax
-  INTEGER*8                                 :: ntime
-  REAL*8                                    :: currJDtot ,currJDyr,currfrac
+  INTEGER(kind=8)                                 :: ntime
+  REAL(kind=8)                                    :: currJDtot ,currJDyr,currfrac
   INTEGER                                   :: currYear  ,currMon  ,currDay
   INTEGER                                   :: currHour, currMin, currSec
-  REAL*8                                    :: startJD=0 ,baseJD=0,ttpart
+  REAL(kind=8)                                    :: startJD=0 ,baseJD=0,ttpart
   INTEGER                                   :: fieldsPerFile
 CONTAINS
   subroutine updateClock  
@@ -104,7 +104,7 @@ CONTAINS
     !---computes the gregorian calendar date (year,month,day)              
     !   given the julian date (jd).                                        
     !   Source: http://aa.usno.navy.mil/faq/docs/JD_Formula.php            
-    REAL*8                                   :: rjd
+    REAL(kind=8)                                   :: rjd
     INTEGER                                  :: jd
     INTEGER                                  :: year ,month ,day
     INTEGER                                  :: i ,j ,k ,l ,n
@@ -143,10 +143,10 @@ ENDMODULE mod_time
 
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
 MODULE mod_grid
-  REAL*4, ALLOCATABLE, DIMENSION(:,:,:)     :: botbox
-  REAL*4, ALLOCATABLE, DIMENSION(:,:)       :: dxv, dyu, ang
-  REAL*8, ALLOCATABLE, DIMENSION(:)         :: dz
-  REAL*8, ALLOCATABLE, DIMENSION(:,:)       :: dxdy
+  REAL(kind=4), ALLOCATABLE, DIMENSION(:,:,:)     :: botbox
+  REAL(kind=4), ALLOCATABLE, DIMENSION(:,:)       :: dxv, dyu, ang
+  REAL(kind=8), ALLOCATABLE, DIMENSION(:)         :: dz
+  REAL(kind=8), ALLOCATABLE, DIMENSION(:,:)       :: dxdy
   INTEGER, ALLOCATABLE, DIMENSION(:,:)      :: mask
 #ifdef zgrid3Dt 
   REAL, ALLOCATABLE, DIMENSION(:,:,:,:)     :: dzt
@@ -158,11 +158,11 @@ MODULE mod_grid
   REAL, ALLOCATABLE, DIMENSION(:,:,:)       :: dztb
 #endif /*varbottombox*/
 #ifdef ifs
-  REAL*8, ALLOCATABLE, DIMENSION(:)         :: aa,bb
+  REAL(kind=8), ALLOCATABLE, DIMENSION(:)         :: aa,bb
 #endif
-  REAL*8                                    :: rmin ,tmin ,smin,&
+  REAL(kind=8)                                    :: rmin ,tmin ,smin,&
   &                                            rmax ,smax ,tmax
-  REAL*8                                    :: dr ,dtemp ,dsalt
+  REAL(kind=8)                                    :: dr ,dtemp ,dsalt
   INTEGER, ALLOCATABLE, DIMENSION(:,:)      :: kmt, kmu, kmv, depth
   INTEGER                                   :: subGrid     ,subGridID
   INTEGER                                   :: subGridImin ,subGridImax
@@ -172,40 +172,40 @@ MODULE mod_grid
 ENDMODULE mod_grid
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
 MODULE mod_buoyancy
-  REAL*4                                    :: tmin0 ,tmax0
-  REAL*4                                    :: smin0 ,smax0
-  REAL*4                                    :: rmin0 ,rmax0
-  REAL*4                                    :: tmine ,tmaxe
-  REAL*4                                    :: smine ,smaxe
-  REAL*4                                    :: rmine ,rmaxe
+  REAL(kind=4)                                    :: tmin0 ,tmax0
+  REAL(kind=4)                                    :: smin0 ,smax0
+  REAL(kind=4)                                    :: rmin0 ,rmax0
+  REAL(kind=4)                                    :: tmine ,tmaxe
+  REAL(kind=4)                                    :: smine ,smaxe
+  REAL(kind=4)                                    :: rmine ,rmaxe
 ENDMODULE mod_buoyancy
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
 MODULE mod_domain
   INTEGER, DIMENSION(10)                    :: ienw ,iene
   INTEGER, DIMENSION(10)                    :: jens ,jenn
-  REAL*4                                    :: timax
+  REAL(kind=4)                                    :: timax
 ENDMODULE mod_domain
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
 MODULE mod_vel
-  REAL*4, ALLOCATABLE, DIMENSION(:,:,:,:)    :: uflux ,vflux
+  REAL(kind=4), ALLOCATABLE, DIMENSION(:,:,:,:)    :: uflux ,vflux
 #if defined full_wflux
-  REAL*8, ALLOCATABLE, DIMENSION(:,:,:,:)    :: wflux
+  REAL(kind=8), ALLOCATABLE, DIMENSION(:,:,:,:)    :: wflux
 #else
-  REAL*8, ALLOCATABLE, DIMENSION(:,:)        :: wflux
+  REAL(kind=8), ALLOCATABLE, DIMENSION(:,:)        :: wflux
 #endif
   REAL,   ALLOCATABLE, DIMENSION(:,:,:)      :: uvel ,vvel ,wvel 
-  REAL*4, ALLOCATABLE, DIMENSION(:,:,:)      :: hs
-  REAL*8                                     :: ff
+  REAL(kind=4), ALLOCATABLE, DIMENSION(:,:,:)      :: hs
+  REAL(kind=8)                                     :: ff
 ENDMODULE mod_vel
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
 MODULE mod_traj
-  REAL*8, ALLOCATABLE, DIMENSION(:,:)        :: trj
+  REAL(kind=8), ALLOCATABLE, DIMENSION(:,:)        :: trj
   INTEGER, ALLOCATABLE, DIMENSION(:,:)       :: nrj 
 ENDMODULE mod_traj
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===
 MODULE mod_dens
 #ifdef tempsalt
-  REAL*4, ALLOCATABLE, DIMENSION(:,:,:,:)    :: tem,sal,rho
+  REAL(kind=4), ALLOCATABLE, DIMENSION(:,:,:,:)    :: tem,sal,rho
 #endif
 ENDMODULE mod_dens
 ! ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===   ===

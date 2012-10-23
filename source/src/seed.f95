@@ -80,6 +80,7 @@ CONTAINS
       !----------------------------------------
       
       startLoop: DO jsd=1,nsdMax
+		 print *, "startLoop", jsd
          iist  = seed_ijk (jsd,1)
          ijst  = seed_ijk (jsd,2)
          ikst  = seed_ijk (jsd,3)
@@ -216,7 +217,9 @@ CONTAINS
          print *, "ijt", ijt
          print *, "ikt", ikt
          ijjLoop: DO jjt=1,ijt
-            kkkLoop: DO jkt=1,ikt          
+            print *, 'ijjLoop:', jjt
+            kkkLoop: DO jkt=1,ikt   
+				print *, 'kkkLoop:', jkt, ikt
             
 !            IF ( ib /= iist ) PRINT*,iist,ib
 !            IF ( jb /= ijst ) PRINT*,ijst,jb
@@ -308,7 +311,8 @@ CONTAINS
                ! ------------------------------------------------------------
                ! --- Put the new trajectory into the matrices trj and nrj ---
                ! ------------------------------------------------------------
-               print *, "seed", x1, y1, z1
+               print *, "seed trj", ntrac, x1, y1, z1, tt,    subvol, 0.d0, tt
+			   print *, "seed nrj",  ib, jb, kb,  0, IDINT(ts)
                trj(ntrac,1:7) = [ x1, y1, z1, tt,    subvol, 0.d0, tt ]
                nrj(ntrac,1:5) = [ ib, jb, kb,  0, IDINT(ts)]
                nrj(ntrac,7)=1

@@ -444,11 +444,14 @@ SUBROUTINE init_arrays
       hs    = 0.
       uflux = 0.
       vflux = 0.
+      
+      print *, "init_arrays"
 #ifdef full_wflux
       ALLOCATE ( wflux(imt+2 ,jmt+2 ,0:km,NST) )
 #else
       ALLOCATE ( wflux(0:km,NST) )
 #endif
+      print *, "ALLOCATE:trj",ntracmax,NTRJ
       ALLOCATE ( uvel(imt+2,jmt,km) ,vvel(imt+2,jmt,km) ,wvel(imt+2,jmt,km) )
       ALLOCATE ( trj(ntracmax,NTRJ), nrj(ntracmax,NNRJ) )
 #ifdef tempsalt

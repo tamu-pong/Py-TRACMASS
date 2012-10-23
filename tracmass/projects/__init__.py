@@ -6,8 +6,8 @@ from tracmass import _tracmass as tm
 
 class Project(object):
     
-    def __init__(self, start, end, delta):
-        
+    def __init__(self, ntimesteps, start, end, delta):
+        self.ntimesteps = ntimesteps
         self.times = times = []
         
         if not delta:
@@ -31,6 +31,13 @@ class Project(object):
         
     def setup_tracmass(self, seed_locations):
         
+        tm.mod_seed.nqua = 4
+        tm.mod_param.partquant = 1
+        
+        tm.mod_grid.subgrid = 0
+        tm.mod_param.kriva = 1
+        tm.mod_domain.timax = 3650.0
+        
         tm.loop.writedata = self.writedata
         tm.loop.readfields = self.readfields
         
@@ -38,22 +45,22 @@ class Project(object):
         tm.mod_param.lbt = 1
         tm.mod_param.nend = tm.mod_param.lbt + 1
         
-        tm.mod_param.ntracmax = seed_locations.shape[0]
+        tm.mod_param.ntracmax = seed_locations.shape[0] + 1
         tm.init_params2()
         tm.coordinat()
         
-        tm.mod_time.intrun = len(self.times)
+        tm.mod_time.intrun = self.ntimesteps - 1
         
         if self.start > self.end: #Backward 
             self.mod_seed.nff = 2
             self.mod_time.intstep = -1
-            tm.mod_time.intstart = self.end.toordinal()
-            tm.mod_time.intend = self.start.toordinal() 
+            tm.mod_time.intstart = self.ntimesteps
+            tm.mod_time.intend = 0
         else: #Forward
             tm.mod_time.intstep = 1
             tm.mod_seed.nff = 1
-            tm.mod_time.intstart = self.start.toordinal()   
-            tm.mod_time.intend = self.end.toordinal()
+            tm.mod_time.intstart = 0
+            tm.mod_time.intend = self.ntimesteps
         
         tm.mod_grid.kmt[:] = tm.mod_param.km
             
@@ -67,13 +74,16 @@ class Project(object):
         
         tm.mod_grid.kmt[:] = tm.mod_param.km
         
+        tm.mod_time.intspin = 1
+        tm.mod_seed.idir = 0
+
         tm.allocate_seed(seed_locations.shape[0])
         tm.mod_seed.isec = 5
         tm.mod_seed.seed_ijk[:, :] = 2 
         tm.mod_seed.seed_xyz[:, :] = seed_locations
         tm.mod_seed.seed_set[:] = [tm.mod_seed.isec, tm.mod_seed.idir] 
-
-
+        
+        self.trajectory = [list() for _ in range(seed_locations.shape[0])]
     @classmethod
     def commandline_args(cls, parser):
         '''
@@ -83,7 +93,6 @@ class Project(object):
 
     def run(self):
         tm.loop()
-        
         
 __all__ = ['get_commands']
 

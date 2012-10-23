@@ -8,18 +8,21 @@ from datetime import datetime, timedelta
 #Wrapped fortran trackmass module
 from tracmass import _tracmass as tm
 from tracmass.projects import Project
-from tracmass.utils import read_params
 import numpy as np
+from argparse import ArgumentParser
+import netCDF4
 
-class Tes(Project):
-    def writedata(self,*args):
+class ROMS(Project):
+    def writedata(self, sel, t0, temp, x1, y1, z1, niter, salt, dens):
         '''
         Write out data. this is called for every particle and every iteration.
         This is very slow in python and perhaps should be stored into a numpy array and called only once per iteration. 
         Also: the actual check to write to file is inside `tm.writedata2`
         '''
         #Wrapped from fortran tracmass source/src/loop/f95
-        tm.writedata2(*args)
+        
+        if tm.mod_traj.nrj[tm.mod_param.ntrac - 1, 3] == niter - 1:
+            self.trajectory[tm.mod_param.ntrac - 1].append((x1, y1, z1))
         
     def readfields(self):
         '''
@@ -27,63 +30,105 @@ class Tes(Project):
         
         You must access and set the uflux and vflux variables. 
         
-        
         '''
-        
         #Here are the relevant fortran modules. Static variables are contained within
         param = tm.mod_param
-        coord = tm.mod_coord
         time = tm.mod_time
         grid = tm.mod_grid
         vel = tm.mod_vel
         
-        #TRY This: print dir(vel) 
-        #TRY This: print vel.uflux.shape
-        #TRY This: print vel.vflux.shape
-        # See source/src/comments.f95 for some more info.
+        FIXME_AREA =  1000000
         
-        # Wrapped from fortran tracmass.
-        # Take a look in source/projects/tes/readfields.f95
-        tm.tes_readfields()
-    
-    
+        if time.ints == time.intstart:
+            print time.ints
+            vel.hs[:] = 0
+            
+            print vel.uflux.shape
+            print vel.vflux.shape
+            print self.u.shape
+            print self.v.shape
+            
+            vel.uflux[:] = 0
+            vel.vflux[:] = 0
+            
+            vel.uflux[:-1, :, :, 1] = self.u[time.ints].transpose(2, 1, 0) * FIXME_AREA
+            vel.vflux[:, :-2, :, 1] = self.v[time.ints].transpose(2, 1, 0) * FIXME_AREA
+            
+            grid.kmt[:] = param.km
         
-    def __init__(self, start, end, delta):
+            tm.coordinat()
+            
+        #Assign
+        vel.uflux[:, :, :, 0] = vel.uflux[:, :, :, 1]
+        vel.vflux[:, :, :, 0] = vel.vflux[:, :, :, 1]
+        
+        vel.uflux[:-1, :, :, 1] = self.u[time.ints].transpose(2, 1, 0) * FIXME_AREA
+        vel.vflux[:, :-2, :, 1] = self.v[time.ints].transpose(2, 1, 0) * FIXME_AREA
+        
+        print 'ints', time.ints
+        
+    def __init__(self, nc, start, end, delta):
         
         #This sets a lot of the fortran static variables
-        Project.__init__(self, start, end, delta)
+        Project.__init__(self, nc.variables['ocean_time'].size, start, end, delta)
         
-        from os.path import abspath, join, curdir
-        filename = abspath(join(curdir, 'results-new', 'data'))
+        self.nc = nc
+        self.u = nc.variables['u']
+        self.v = nc.variables['v']
         
-        #Initialize for tm.writedata
-        tm.fortran_file(56, filename + '_run.asc')       # trajectory path
-        tm.fortran_file(57, filename + '_out.asc')       # exit position
-        tm.fortran_file(58, filename + '_in.asc')        # entrance position
-        tm.fortran_file(59, filename + '_err.asc')       # Error position
+        tm.mod_param.imt = len(nc.dimensions['xi_rho'])
+        tm.mod_param.jmt = len(nc.dimensions['eta_rho'])
+        tm.mod_param.km = len(nc.dimensions['s_rho'])
+        
+        ngcm = (nc.variables['ocean_time'][1] - nc.variables['ocean_time'][0]) / (3600)
+        tm.mod_param.ngcm = ngcm
+        
+        tm.mod_param.iter = 100 # iteration between two gcm data sets (always =1 for timeanalyt)
+        
     
-    
-
+        
 def main():
+    
+    parser = ArgumentParser()
+    parser.add_argument('-i', '--input')
+    
+    args = parser.parse_args()
+    
+    nc = netCDF4.Dataset(args.input)
     
     start = datetime.now()
     end = start + timedelta(days=6)
     delta = timedelta(hours=4)
     
-    tes = Tes(start, end, delta)
+    roms = ROMS(nc, start, end, delta)
     
-    #Read parameters from yaml files into static fortran variables
-    read_params(open('tes_run.yaml'))
-    read_params(open('tes_grid.yaml'))
-
     #Initialize trackmass to only seed once. 
     #seeding can be done here in and outer loop if more times are required
-    #This also sets a lot of the fortran static variables 
-    seed_locations = np.array([[9.125, 49.125, 4.5], [8.125, 49.125, 4.5], [8.125, 48.125, 4.5]])
-    tes.setup_tracmass(seed_locations)
+    #This also sets a lot of the fortran static variables
+     
+    seed_locations = np.array([
+                               [207.125, 55.125, 4.5],
+                               [210.125, 55.125, 4.5],
+                               [213.125, 55.125, 4.5],
+
+                               [207.125, 57.125, 4.5],
+                               [210.125, 57.125, 4.5],
+                               [213.125, 57.125, 4.5],
+
+                               [207.125, 59.125, 4.5],
+                               [210.125, 59.125, 4.5],
+                               [213.125, 59.125, 4.5],
+                               ])
     
+    roms.setup_tracmass(seed_locations)
+    
+#    tm.init_seed()
     #Runs the main loop
-    tes.run()
+    roms.run()
+    
+    import pickle
+    pickle.dump(roms.trajectory, open('roms.trajectory.pickle', 'w'))
+    
 
 if __name__ == '__main__':
     main()

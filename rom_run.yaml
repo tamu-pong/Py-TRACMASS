@@ -1,0 +1,8 @@
+mod_grid:
+    subGrid : 0
+
+mod_param:
+  kriva    : 1
+  #
+  partQuant : 1     #(particles/gridcell or m3s-1/particle or m3/particle)
+

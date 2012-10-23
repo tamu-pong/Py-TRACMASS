@@ -26,6 +26,7 @@ SUBROUTINE allocate_seed(num_particles)
    
    INTEGER :: num_particles
    
+   print *, "allocate_seed", num_particles
     nsd = num_particles
     nsdmax = num_particles
     !nsdtim = num_particles 
